@@ -8,15 +8,32 @@
  * fields (attachments, a reply address) without a new envelope version.
  */
 
-import { concat, fromBase64Url, open, seal, toBase64Url, utf8Decode, utf8Encode, type Bytes, type InboxKeyPair } from "../crypto";
+import { KEY_LENGTH, concat, fromBase64Url, open, seal, toBase64Url, utf8Decode, utf8Encode, type Bytes, type InboxKeyPair } from "../crypto";
+import { isEmail } from "./links";
 
 const FORMAT_DEFLATE_JSON = 1;
 
 /** Upper bound on decompressed size, so a crafted message cannot exhaust memory. */
 export const MAX_PAYLOAD_BYTES = 1_000_000;
 
+/** Where a secure reply should go: the sender's own inbox. */
+export interface ReplyTo {
+  key: Bytes;
+  email?: string;
+}
+
 export interface Payload {
   text: string;
+  /** The sender's inbox, if they want an encrypted reply. */
+  replyTo?: ReplyTo;
+  /** The recipient's e-mail as the sender knew it; lets replies carry it back. */
+  to?: string;
+}
+
+interface Wire {
+  t: string;
+  r?: { k: string; e?: string };
+  to?: string;
 }
 
 async function pipe(data: Bytes, transform: CompressionStream | DecompressionStream, limit: number): Promise<Bytes> {
@@ -39,7 +56,14 @@ async function pipe(data: Bytes, transform: CompressionStream | DecompressionStr
 }
 
 export async function encodePayload(payload: Payload): Promise<Bytes> {
-  const json = utf8Encode(JSON.stringify({ t: payload.text }));
+  const wire: Wire = { t: payload.text };
+  if (payload.replyTo) {
+    wire.r = { k: toBase64Url(payload.replyTo.key), e: payload.replyTo.email };
+  }
+  if (payload.to) {
+    wire.to = payload.to;
+  }
+  const json = utf8Encode(JSON.stringify(wire));
   const compressed = await pipe(json, new CompressionStream("deflate-raw"), Infinity);
   return concat(Uint8Array.of(FORMAT_DEFLATE_JSON), compressed);
 }
@@ -61,7 +85,26 @@ export async function decodePayload(bytes: Bytes): Promise<Payload> {
   if (typeof parsed !== "object" || parsed === null || typeof (parsed as { t?: unknown }).t !== "string") {
     throw new Error("Message content is damaged");
   }
-  return { text: (parsed as { t: string }).t };
+  const wire = parsed as Partial<Record<keyof Wire, unknown>> & { t: string };
+  return { text: wire.t, replyTo: parseReplyTo(wire.r), to: optionalEmail(wire.to) };
+}
+
+function optionalEmail(value: unknown): string | undefined {
+  return typeof value === "string" && isEmail(value) ? value : undefined;
+}
+
+/** Optional fields are dropped rather than failing the whole message if malformed. */
+function parseReplyTo(value: unknown): ReplyTo | undefined {
+  if (typeof value !== "object" || value === null) {
+    return undefined;
+  }
+  const { k, e } = value as { k?: unknown; e?: unknown };
+  try {
+    const key = typeof k === "string" ? fromBase64Url(k) : null;
+    return key?.length === KEY_LENGTH ? { key, email: optionalEmail(e) } : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Encrypts a payload to an inbox; returns the base64url envelope for a link. */

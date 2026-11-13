@@ -41,4 +41,21 @@ describe("payload", () => {
     const raw = toBase64Url(await seal(inbox.publicKey, new TextEncoder().encode("plain")));
     await expect(openMessage(inbox, raw)).rejects.toThrow(/format/);
   });
+
+  it("carries an optional reply address and recipient e-mail", async () => {
+    const key = crypto.getRandomValues(new Uint8Array(32));
+    const decoded = await decodePayload(await encodePayload({ text: "hi", replyTo: { key, email: "me@x.io" }, to: "you@y.io" }));
+    expect(decoded).toEqual({ text: "hi", replyTo: { key, email: "me@x.io" }, to: "you@y.io" });
+    expect(await decodePayload(await encodePayload({ text: "hi" }))).toEqual({ text: "hi", replyTo: undefined, to: undefined });
+  });
+
+  it("drops malformed optional fields instead of rejecting the message", async () => {
+    const json = JSON.stringify({ t: "hi", r: { k: "short", e: "x" }, to: "not an email" });
+    const bytes = concat(Uint8Array.of(1), await deflate(new TextEncoder().encode(json)));
+    expect(await decodePayload(bytes)).toEqual({ text: "hi", replyTo: undefined, to: undefined });
+    const badEmail = JSON.stringify({ t: "hi", r: { k: toBase64Url(new Uint8Array(32)), e: 5 } });
+    const decoded = await decodePayload(concat(Uint8Array.of(1), await deflate(new TextEncoder().encode(badEmail))));
+    expect(decoded.replyTo?.email).toBeUndefined();
+    expect(decoded.replyTo?.key.length).toBe(32);
+  });
 });

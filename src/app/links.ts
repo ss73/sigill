@@ -71,7 +71,11 @@ export function appBase(): string {
 }
 
 export function inboxLink(base: string, publicKey: Uint8Array, ownerEmail?: string): string {
-  return `${base}#${fragment([["to", toBase64Url(publicKey)], ["e", ownerEmail]])}`;
+  return `${base}${inboxHash(publicKey, ownerEmail)}`;
+}
+
+export function inboxHash(publicKey: Uint8Array, ownerEmail?: string): string {
+  return `#${fragment([["to", toBase64Url(publicKey)], ["e", ownerEmail]])}`;
 }
 
 export function messageLink(base: string, envelope: string): string {

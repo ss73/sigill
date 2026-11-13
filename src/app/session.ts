@@ -8,6 +8,7 @@ import { keyPairFromSeed, seedFromPrf, type InboxKeyPair } from "../crypto";
 import { PasskeyError, createInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
 
 let current: InboxKeyPair | null = null;
+let email: string | undefined;
 
 async function toInbox(result: PrfResult): Promise<InboxKeyPair> {
   const seed = await seedFromPrf(result.prf);
@@ -22,8 +23,21 @@ export function currentInbox(): InboxKeyPair | null {
   return current;
 }
 
-export async function createInbox(email: string): Promise<InboxKeyPair> {
-  return toInbox(await createInboxPasskey(RP_ID, email || "Send Me Safe inbox"));
+/** The user's own e-mail, if they told us this visit; used to address replies. */
+export function sessionEmail(): string | undefined {
+  return email;
+}
+
+export function setSessionEmail(value: string | undefined): void {
+  email = value || undefined;
+}
+
+export async function createInbox(ownEmail: string): Promise<InboxKeyPair> {
+  const inbox = await toInbox(await createInboxPasskey(RP_ID, ownEmail || "Send Me Safe inbox"));
+  if (ownEmail) {
+    setSessionEmail(ownEmail);
+  }
+  return inbox;
 }
 
 export async function unlockInbox(): Promise<InboxKeyPair> {

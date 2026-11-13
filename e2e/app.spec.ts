@@ -14,6 +14,11 @@ async function createInbox(page: Page, email?: string): Promise<string> {
 
 async function writeMessage(page: Page, inboxUrl: string, text: string): Promise<string> {
   await page.goto(inboxUrl);
+  return writeMessageHere(page, text);
+}
+
+/** Types a message on the current compose page and returns the "Send by e-mail" href. */
+async function writeMessageHere(page: Page, text: string): Promise<string> {
   await page.getByTestId("message").fill(text);
   const send = page.getByTestId("send-email");
   await expect(send).not.toHaveAttribute("aria-disabled", "true");
@@ -122,4 +127,74 @@ test("a passkey without PRF gets a clear explanation", async ({ page }) => {
 test("a broken inbox link is explained", async ({ page }) => {
   await page.goto("/#to=abc");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("This secure link is incomplete");
+});
+
+test("secure reply: a two-person conversation, each reply one click away", async ({ browser }) => {
+  // Two people, each with their own browser and passkey.
+  const alice = await (await browser.newContext()).newPage();
+  const bob = await (await browser.newContext()).newPage();
+  await addAuthenticator(alice);
+  await addAuthenticator(bob);
+
+  const aliceLink = await createInbox(alice, "alice@example.com");
+  await createInbox(bob, "bob@example.com");
+
+  // Bob writes to Alice. He unlocked his inbox this visit, so reply is on by default.
+  await bob.goto(aliceLink);
+  await expect(bob.getByTestId("reply-panel")).toContainText("Secure reply is on");
+  await expect(bob.getByTestId("reply-email")).toHaveValue("bob@example.com");
+  const first = firstLink(parseMailto(await writeMessageHere(bob, "Hi Alice, what's the door code?")).body);
+
+  // Alice reads it in a fresh visit and replies with one click.
+  await alice.goto(first);
+  await alice.reload();
+  await alice.getByTestId("open-message").click();
+  await expect(alice.getByTestId("message-text")).toHaveText("Hi Alice, what's the door code?");
+  await expect(alice.getByRole("heading", { level: 1 }).locator("..")).toContainText("From bob@example.com");
+  await alice.getByTestId("reply").click();
+  await expect(alice.getByRole("heading", { level: 1 })).toHaveText("Secure message to bob@example.com");
+  // Her inbox is unlocked and her address came back inside Bob's message.
+  await expect(alice.getByTestId("reply-panel")).toContainText("Secure reply is on");
+  await expect(alice.getByTestId("reply-email")).toHaveValue("alice@example.com");
+  const answer = parseMailto(await writeMessageHere(alice, "It's 4711."));
+  expect(answer.to).toBe("bob@example.com");
+
+  // Bob reads the answer and can keep the conversation going.
+  await bob.goto(firstLink(answer.body));
+  await bob.reload();
+  await bob.getByTestId("open-message").click();
+  await expect(bob.getByTestId("message-text")).toHaveText("It's 4711.");
+  await expect(bob.getByTestId("reply")).toBeVisible();
+});
+
+test("secure reply can be added with the passkey, or left out", async ({ page }) => {
+  await addAuthenticator(page);
+  const ownLink = await createInbox(page, "carol@example.com");
+
+  // Fresh visit: nothing unlocked, so reply starts off and is added on request.
+  await page.goto(ownLink);
+  await page.reload();
+  await expect(page.getByTestId("reply-add")).toBeVisible();
+  await page.getByTestId("reply-add").click();
+  await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
+
+  // Opting out again: the recipient is told there is no reply address.
+  await page.getByTestId("reply-remove").click();
+  await expect(page.getByTestId("reply-add")).toBeVisible();
+  const href = await writeMessageHere(page, "no reply wanted");
+  await page.goto(firstLink(parseMailto(href).body));
+  await expect(page.getByTestId("message-text")).toHaveText("no reply wanted");
+  await expect(page.getByTestId("reply")).toHaveCount(0);
+  await expect(page.getByTestId("no-reply")).toBeVisible();
+});
+
+test("secure reply offers to create an inbox when the sender has none", async ({ page }) => {
+  await addAuthenticator(page);
+  const stranger = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
+  await page.goto(`/#to=${stranger}`);
+  await page.getByTestId("message").fill("draft stays");
+  await page.getByTestId("reply-add").click(); // no passkey exists yet: the prompt fails
+  await page.getByTestId("reply-create").click();
+  await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
+  await expect(page.getByTestId("message")).toHaveValue("draft stays");
 });

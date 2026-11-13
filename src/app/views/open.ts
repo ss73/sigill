@@ -3,10 +3,10 @@
 import { rpIdProblem } from "../../config";
 import { fromBase64Url, isWellFormed } from "../../crypto";
 import { h } from "../dom";
-import { fragmentFromPaste } from "../links";
+import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
-import { currentInbox, passkeyErrorMessage, unlockInbox } from "../session";
-import { actions, backLink, button, copyButton, field, messageSlot, notice, page, title } from "../ui";
+import { currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
+import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
 /** Distinguishes "not for this inbox" from passkey trouble and broken links. */
 function decryptErrorMessage(error: unknown): string {
@@ -79,14 +79,29 @@ export function openView(envelope?: string): HTMLElement {
     slot.show(null);
     try {
       const inbox = (useCurrent && currentInbox()) || (await unlockInbox());
-      const { text } = await openMessage(inbox, envelope!);
+      const { text, replyTo, to } = await openMessage(inbox, envelope!);
+      if (to && !sessionEmail()) {
+        setSessionEmail(to); // lets a reply carry the reader's address back
+      }
       content.replaceChildren(
-        title("Your secure message"),
+        title("Your secure message", replyTo?.email ? `From ${replyTo.email}` : undefined),
         h(
           "section",
           { class: "card" },
           h("div", { class: "message", "data-testid": "message-text" }, text),
-          actions(copyButton("Copy text", () => text)),
+          actions(
+            replyTo
+              ? linkButton("Reply securely", inboxHash(replyTo.key, replyTo.email), { icon: "send", testId: "reply" })
+              : null,
+            copyButton("Copy text", () => text),
+          ),
+          replyTo
+            ? null
+            : h(
+                "p",
+                { class: "help", "data-testid": "no-reply" },
+                "The sender didn't include a secure reply address. To answer securely, ask them for their secure link.",
+              ),
         ),
         h(
           "p",

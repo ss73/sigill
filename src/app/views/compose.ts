@@ -1,11 +1,13 @@
 /** Writing to an inbox: the page a secure link opens. No passkey needed. */
 
-import { fingerprint } from "../../crypto";
+import { fingerprint, type InboxKeyPair } from "../../crypto";
 import { h } from "../dom";
-import { appBase, messageLink } from "../links";
+import { appBase, isEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
-import { sealMessage } from "../payload";
-import { actions, backLink, copyButton, field, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
+import { sealMessage, type ReplyTo } from "../payload";
+import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
+import { PasskeyError } from "../../passkey";
+import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElement {
   const who = recipientEmail ?? "the owner of this link";
@@ -20,9 +22,98 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   const slot = messageSlot();
   const codeSlot = h("div");
 
+  // --- Secure reply ------------------------------------------------------------
+  // Included by default when the user already unlocked their inbox this visit
+  // (e.g. they just read a message and pressed "Reply securely").
+  let replyInbox: InboxKeyPair | null = currentInbox();
+  const replyEmail = h("input", {
+    type: "email",
+    autocomplete: "email",
+    placeholder: "you@email.com",
+    value: sessionEmail() ?? "",
+    "data-testid": "reply-email",
+  });
+  replyEmail.addEventListener("input", () => {
+    const value = replyEmail.value.trim();
+    if (isEmail(value)) {
+      setSessionEmail(value);
+    }
+    void update();
+  });
+  const replyPanel = h("div", { class: "reply", "data-testid": "reply-panel" });
+  const replySlot = messageSlot();
+
+  async function attach(action: () => Promise<InboxKeyPair>): Promise<void> {
+    replySlot.show(null);
+    try {
+      replyInbox = await action();
+      replyEmail.value = replyEmail.value || sessionEmail() || "";
+      renderReply();
+      void update();
+    } catch (error) {
+      const cancelled = error instanceof PasskeyError && error.code === "cancelled";
+      replySlot.show(
+        cancelled
+          ? notice(
+              "info",
+              "No secure inbox yet? Create one now: it takes one passkey confirmation, and your message stays as it is. ",
+              button("Create my inbox", () => attach(() => createInbox(replyEmail.value.trim())), {
+                variant: "text",
+                testId: "reply-create",
+              }),
+            )
+          : notice("error", passkeyErrorMessage(error)),
+      );
+    }
+  }
+
+  function renderReply(): void {
+    if (replyInbox) {
+      replyPanel.replaceChildren(
+        notice(
+          "success",
+          h("strong", null, "Secure reply is on. "),
+          `${recipientEmail ?? "The recipient"} can answer with one click, and the reply is encrypted for your inbox. `,
+          button(
+            "Remove",
+            () => {
+              replyInbox = null;
+              renderReply();
+              void update();
+            },
+            { variant: "text", testId: "reply-remove" },
+          ),
+        ),
+        field("Your e-mail address", replyEmail, "Optional. So the reply is addressed to you."),
+      );
+    } else {
+      replyPanel.replaceChildren(
+        actions(
+          button("Let them reply securely", () => attach(unlockInbox), {
+            variant: "secondary",
+            icon: "key",
+            testId: "reply-add",
+          }),
+        ),
+        h("p", { class: "help" }, "Adds your secure inbox to the message, so their answer is encrypted too. You confirm with your passkey."),
+        replySlot.el,
+      );
+    }
+  }
+  renderReply();
+
+  // --- Encrypt as you type --------------------------------------------------------
   let email: Email | null = null;
   let fits = true;
   let sequence = 0;
+
+  function replyTo(): ReplyTo | undefined {
+    if (!replyInbox) {
+      return undefined;
+    }
+    const own = replyEmail.value.trim();
+    return { key: replyInbox.publicKey, email: isEmail(own) ? own : undefined };
+  }
 
   async function update(): Promise<void> {
     const mine = ++sequence;
@@ -34,9 +125,9 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       status.textContent = "Your message is encrypted as you type.";
       return;
     }
-    const envelope = await sealMessage(to, { text });
+    const envelope = await sealMessage(to, { text, replyTo: replyTo(), to: recipientEmail });
     if (mine !== sequence) {
-      return; // a newer keystroke won
+      return; // a newer change won
     }
     email = messageEmail(messageLink(appBase(), envelope));
     const full = mailto(recipientEmail, email);
@@ -89,6 +180,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       "section",
       { class: "card" },
       field("Message", textarea),
+      replyPanel,
       status,
       actions(send, copyButton("Copy instead", () => (email ? asText(email) : ""), { testId: "copy-message" })),
       slot.el,

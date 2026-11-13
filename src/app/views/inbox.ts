@@ -5,13 +5,14 @@ import { rpIdProblem } from "../../config";
 import { h } from "../dom";
 import { appBase, inboxLink, isEmail } from "../links";
 import { inboxLinkEmail, mailto } from "../mail";
-import { createInbox, currentInbox, passkeyErrorMessage, unlockInbox } from "../session";
+import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
 import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 export function inboxView(opts: { reply?: string; email?: string }): HTMLElement {
   const root = h("div");
   const inbox = currentInbox();
-  root.append(inbox ? readyView(inbox, opts, false) : setupView(opts, root));
+  const known = { ...opts, email: opts.email ?? sessionEmail() };
+  root.append(inbox ? readyView(inbox, known, false) : setupView(known, root));
   return root;
 }
 
@@ -95,6 +96,10 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
     return inboxLink(appBase(), inbox.publicKey, isEmail(email) ? email : undefined);
   }
   function update(): void {
+    const email = emailInput.value.trim();
+    if (isEmail(email)) {
+      setSessionEmail(email);
+    }
     linkInput.value = link();
     share.href = mailto(opts.reply, inboxLinkEmail(link()));
   }
