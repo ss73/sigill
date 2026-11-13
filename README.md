@@ -41,7 +41,7 @@ fingerprint. Paste the page's test report into notes.
 
 | Platform | Browser | Passkey provider | Result |
 |---|---|---|---|
-| macOS | Safari | iCloud Keychain | |
+| macOS | Safari | iCloud Keychain | ✅ Safari 26.5, 2026-11-13: unlocked the passkey created in Firefox, same fingerprint (browser does not report PRF capability up front) |
 | macOS | Chrome | Google Password Manager | |
 | macOS | Chrome | iCloud Keychain | |
 | macOS | Firefox | iCloud Keychain | ✅ Firefox 152, 2026-11-13: PRF at create (1 prompt); unlock after reload gives same fingerprint |

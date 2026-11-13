@@ -182,7 +182,11 @@ onClick("decrypt", async () => {
     if (!inbox) {
       throw new Error("Create or unlock an inbox first.");
     }
-    const text = await openText(inbox, $<HTMLTextAreaElement>("envelope").value.trim());
+    const envelope = $<HTMLTextAreaElement>("envelope").value.trim();
+    if (!envelope) {
+      throw new Error("Paste an encrypted message first.");
+    }
+    const text = await openText(inbox, envelope);
     $("decrypted").textContent = text;
     $("decrypted").hidden = false;
     log("Decrypted OK.");
