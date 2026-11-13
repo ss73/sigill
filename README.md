@@ -44,7 +44,7 @@ fingerprint. Paste the page's test report into notes.
 | macOS | Safari | iCloud Keychain | |
 | macOS | Chrome | Google Password Manager | |
 | macOS | Chrome | iCloud Keychain | |
-| macOS | Firefox | iCloud Keychain | |
+| macOS | Firefox | iCloud Keychain | ✅ Firefox 152, 2026-11-13: PRF at create (1 prompt); unlock after reload gives same fingerprint |
 | Windows | Edge / Chrome | Windows Hello | |
 | Windows | Firefox | Windows Hello | |
 | Linux | Chrome | Google Password Manager | |
