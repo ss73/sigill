@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Decrypt Message - Send Me Safe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+    <script src="keytools.js"></script>
+</head>
+
+<body>
+    <nav class="navbar has-background-info" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <span class="icon is-large">
+                    <span class="fa-stack">
+                        <i class="fas fa-circle fa-stack-2x has-text-light"></i>
+                        <i class="fas fa-key fa-stack-1x has-text-info"></i>
+                    </span>
+                </span>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    How it works
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    Premium
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    About
+                </a>
+            </div>
+        </div>
+    </nav>
+    <section class="hero is-info">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    Decrypt message
+                </h1>
+                <h2 class="subtitle">
+                    The message from John.Doe@example.com is ready to be
+                    decrypted. 
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <div class="section columns has-background-dark">
+        <div class="column">
+            <article class="message is-info">
+                <div class="message-body">
+                    <div class="block">
+                        Press the decrypt button to view the message in clear text 
+                        <textarea id="ciphertext" class="textarea"
+                                placeholder="" rows="5">
+                        </textarea>
+                        <script>
+                            let urlParams = new URLSearchParams(location.search);
+                            document.getElementById("ciphertext").value = urlParams.get("iv") + "." + urlParams.get("m");
+                        </script>
+
+                    </div>
+
+                    <div class="columns is-mobile is-flex-wrap-wrap">
+                        <div class="column is-flex-grow-0">
+                            <div class="block">
+                                <button id="button_process" class="button is-info">Decrypt</button>
+                            </div>
+                        </div>
+                        <div class="column is-flex-grow-5">
+                            <div class="block has-text-dark has-text-right is-size-7">
+                                Supported browsers<br>
+                                <i class="fab fa-chrome fa-2x"></i>
+                                <i class="fab fa-firefox fa-2x"></i>
+                                <i class="fab fa-safari fa-2x"></i>
+                                <i class="fab fa-opera fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("button_process").onclick = async () => {
+            let urlParams = new URLSearchParams(location.search);
+            let recipient = urlParams.get("r");
+            let sender = urlParams.get("s");
+            let epoch = urlParams.get("t");
+            let message = urlParams.get("m");
+            let iv = urlParams.get("iv");
+            console.log("Deriving decryption key for message ", recipient, "by", sender);
+            let storageKey = recipient + sender + epoch;
+            // { privateKey: b64, publicKey: senders public key, timestamp: epoch }
+            let keydata = await loadExchangeKey(storageKey);
+            let aesKey = await decodeAndDerive(keydata.publicKey, keydata.privateKey);
+            // Decrypt message
+            let cleartext = await decryptMessage(base64UrlToBuf(message), base64UrlToBuf(iv), aesKey);
+            cleartext = arrayBufferToString(cleartext);
+            cleartext = decodeURIComponent(cleartext);
+            document.getElementById("ciphertext").value = cleartext;
+            //removeOldKeys(3600 * 48);
+        }
+    </script>
+
+</body>
+
+</html>

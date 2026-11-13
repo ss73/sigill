@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Send Me Safe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+    <script src="keytools.js"></script>
+
+</head>
+
+<body>
+
+    <nav class="navbar has-background-info" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <span class="icon is-large">
+                    <span class="fa-stack">
+                        <i class="fas fa-circle fa-stack-2x has-text-light"></i>
+                        <i class="fas fa-key fa-stack-1x has-text-info"></i>
+                    </span>
+                </span>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    How it works
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    Premium
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    About
+                </a>
+            </div>
+        </div>
+    </nav>
+    <section class="hero is-info">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    Send Me Safe
+                </h1>
+                <h2 class="subtitle">
+                    A free service for sending secret information to an e-mail recipient
+                    with zero trust.
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <div class="section columns has-background-dark">
+        <div class="column">
+            <article class="message is-info">
+                <!--
+                <div class="message-header">
+                    <span class="is-size-4  has-text-light">Request secure transfer</span>
+                </div>
+                -->
+                <div class="message-body">
+                    <div class="columns">
+                        <div class="column">
+                            <label class="label">Your e-mail address</label>
+                            <div class="control has-icons-left has-icons-right">
+                                <input id="from_email" class="input" type="text"
+                                    placeholder="Enter your own e-mail address" value=""
+                                    onfocusout="showEither('from_ok', 'from_nok', emailAddressValidate(this.value))">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <span class="icon is-small is-right is-hidden">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <span class="icon is-small is-right is-hidden">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                            </div>
+                            <p id="from_ok" class="help is-hidden is-success">This e-mail address is valid</p>
+                            <p id="from_nok" class="help is-hidden is-danger">This e-mail address is invalid</p>
+                        </div>
+
+                        <div class="column">
+                            <label class="label">Recipients e-mail address</label>
+                            <div class="control has-icons-left has-icons-right">
+                                <input id="to_email" class="input" type="text"
+                                    placeholder="Enter recipients e-mail address" value=""
+                                    onfocusout="showEither('to_ok', 'to_nok', emailAddressValidate(this.value))">
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <span class="icon is-small is-right is-hidden">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <span class="icon is-small is-right is-hidden">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </span>
+                            </div>
+                            <p id="to_ok" class="help is-hidden is-success">This e-mail address is valid</p>
+                            <p id="to_nok" class="help is-hidden is-danger">This e-mail address is invalid</p>
+                        </div>
+                    </div>
+                    <!--
+                    <div class="columns">
+                        <div class="column field">
+                            <label class="label">Message</label>
+                            <div class="control has-icons-left has-icons-right">
+                                <textarea class="textarea" rows=2
+                                    placeholder="Optionally, enter a short message to the recipient - this will not be encrypted"></textarea>
+                                <span class="icon is-small is-right">
+                                    <i class="fas fa-envelope-open-text"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    -->
+                    <div id="process_info" class="notification is-info is-small">
+                    <button class="delete" onclick="document.getElementById('process_info').classList.add('is-hidden')"></button>
+                        <div class="is-size-7">
+                            When you proceed, you will generate a key stored in the browser. This
+                            key is valid for 48 hours. If the transaction is not completed by then
+                            you will have to restart the procedure from scratch. You and the recipient
+                            will each produce half of the key used for encryption. No one but you
+                            are able to decrypt the message, even if someone is able to evesdrop
+                            on the communication.
+                        </div>
+                    </div>
+
+                    <div class="columns is-mobile is-flex-wrap-wrap">
+                        <div class="column is-flex-grow-0">
+                            <div class="block">
+                                <button id="button_process" class="button is-info is-disabled">
+                                    Get started
+                                </button>
+                            </div>
+                        </div>
+                        <div class="column is-flex-grow-0">
+                            <div class="block">
+                                <a id="button_send_email" class="button is-info" href="#">
+                                    Open e-mail
+                                </a>
+                            </div>
+                        </div>
+                        <div class="column is-flex-grow-5">
+                            <div class="block has-text-dark has-text-right is-size-7">
+                                Supported browsers<br>
+                                <i class="fab fa-chrome fa-2x"></i>
+                                <i class="fab fa-firefox fa-2x"></i>
+                                <i class="fab fa-safari fa-2x"></i>
+                                <i class="fab fa-opera fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("button_process").onclick = async () => {
+            let recipient = document.getElementById("to_email").value;
+            let sender = document.getElementById("from_email").value
+            console.log("Creating keypair for communication with", recipient, "by", sender);
+            let key = await generateECKey();
+            let buf = await crypto.subtle.exportKey("pkcs8", key.privateKey);
+            let b64 = bufToBase64Url(buf);
+            let epoch = Math.trunc(new Date().getTime() / 1000);
+            let keydata = { privateKey: b64, timestamp: epoch }
+            let pub_buf = await crypto.subtle.exportKey("raw", key.publicKey);
+            let pub_b64 = bufToBase64Url(pub_buf);
+            console.log("Key generation complete. Public component:", pub_b64);
+
+            // Clean up local storage from old keys
+            removeOldKeys();
+
+            let storageKeyName = recipient + sender + epoch;
+            await storeExchangeKey(storageKeyName, keydata)
+
+            let confirm_url = "http://localhost:3000/confirm/?s=" + sender + "&r=" + recipient + "&k=" +
+                pub_b64 + "&t=" + epoch
+            let subject = "May I send you a secure document?"
+            let body = "Hello,\r\n" +
+                "I would like to send an encrypted document to you. Before we can proceed we " +
+                "need to agree on a secret key. If you click the link below, a key will " +
+                "be generated and stored in your browser. This can then be used to decrypt " +
+                "the file I'll send you next.\r\n\r\n " + confirm_url + " \r\n\r\n" +
+                "If you think this message looks suspicious and you didn't expect it, " +
+                "please feel free to contact me.\r\n\r\nThank you!"
+            let mailto = genMailtoURL(recipient, subject, body);
+            //console.log(mailto);
+            document.getElementById("button_send_email").href = mailto;
+            document.getElementById("button_send_email").click();
+        }
+    </script>
+
+
+</body>
+
+</html>

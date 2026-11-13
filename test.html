@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tests</title>
+    <script src="keytools.js"></script>
+
+</head>
+
+<body>
+    <script>
+        let buf = new ArrayBuffer(97);
+        let uint8 = new Uint8Array(buf);
+        for(i = 0; i < 97; i++) {
+            uint8[i] = Math.floor(Math.random() * 256); 
+        }
+        console.log(buf);
+        let b64 = bufToBase64Url(buf);
+        let decode = base64UrlToBuf(b64);
+        console.log(decode);
+
+        async function test() {
+            let key = await generateECKey();
+            let pub_buf = await crypto.subtle.exportKey("raw", key.publicKey);
+            let pub_bytes = new Uint8Array(pub_buf);
+            console.log(pub_bytes);
+            let pub_b64 = bufToBase64Url(pub_bytes);
+            let pub_buf2 = base64UrlToBuf(pub_b64);
+            console.log(pub_buf2);
+            
+        }
+
+        test();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Send Me Safe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+    <script src="keytools.js"></script>
+
+    <title>Resize Images Before Upload</title>
+</head>
+
+<body>
+
+
+    <nav class="navbar has-background-info" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <span class="icon is-large">
+                    <span class="fa-stack">
+                        <i class="fas fa-circle fa-stack-2x has-text-light"></i>
+                        <i class="fas fa-key fa-stack-1x has-text-info"></i>
+                    </span>
+                </span>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    How it works
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    Premium
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    About
+                </a>
+            </div>
+        </div>
+    </nav>
+    <section class="hero is-info">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    Send to John.Doe@example.com
+                </h1>
+                <h2 class="subtitle">
+                    John.Doe@example.com has confirmed the secure transfer. You now
+                    posess a shared secret that can be used for encryption.
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <div class="section columns has-background-dark">
+        <div class="column">
+            <nav class="panel has-background-white">
+
+                <div id="nav" class="tabs is-boxed is-fullwidth">
+                    <ul>
+                        <li id="nav-file" data-target="pane-file" class="is-active">
+                            <a>
+                                <span class="icon is-small"><i class="far fa-file-alt" aria-hidden="true"></i></span>
+                                <span>File</span>
+                            </a>
+                        </li>
+                        <li id="nav-text" data-target="pane-text">
+                            <a>
+                                <span class="icon is-small"><i class="far fa-comments" aria-hidden="true"></i></span>
+                                <span>Text</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="pane-file" class="panel-block is-flex-wrap-wrap">
+                    <div id="droparea" class="message">
+                        <div class="message-body">
+                            Please drag and drop your file here or click the <strong>Choose a file...</strong> button
+                            below to encrypt
+                            the content before sending it to John.Doe@example.com
+                        </div>
+                        <div class="message-body">
+                            <div id="upload" class="file has-name">
+                                <label class="file-label">
+                                    <input class="file-input" type="file" name="resume">
+                                    <span class="file-cta">
+                                        <span class="file-icon">
+                                            <i class="fas fa-upload"></i>
+                                        </span>
+                                        <span class="file-label">
+                                            Choose a file…
+                                        </span>
+                                    </span>
+                                    <span class="file-name">
+                                        No file selected
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="buttons">
+                        <button id="process-btn" class="button is-info" disabled onclick="process()">Encrypt</button>
+                        <button id="upload-to-server" class="button is-info" disabled>Upload to server</button>
+                        <button id="donload-local" class="button is-info" disabled>Save locally</button>
+                    </div>
+                </div>
+
+                <div id="pane-text" class="panel-block is-flex-wrap-wrap is-hidden">
+                    <div id="droparea" class="message">
+                        <div class="message-body">
+                            Please enter the message you would like to send to John.Doe@example.com below.
+                            <textarea id="plaintext" class="textarea"
+                                placeholder="Text you enter here will be encrypted" rows="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="buttons">
+                        <button id="process-txt-btn" class="button is-info">Encrypt</button>
+                        <a id="email-txt-btn" class="button is-info" href="#" disabled>Open Email</a>
+                    </div>
+                </div>
+
+
+            </nav>
+            <div>
+                <img id="input" />
+            </div>
+            <div>
+                <img id="output" />
+            </div>
+
+
+        </div>
+    </div>
+</body>
+
+<script>
+    const fileInput = document.querySelector('#upload input[type=file]');
+    fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+            const fileName = document.querySelector('#upload .file-name');
+            fileName.textContent = fileInput.files[0].name;
+            document.getElementById("process-btn").removeAttribute("disabled");
+        }
+    }
+
+    let dropArea = document.getElementById('droparea')
+    let dndEvents = ['dragenter', 'dragover', 'dragleave', 'drop'];
+    dndEvents.forEach(eventName => {
+        dropArea.addEventListener(eventName, preventDefaults, false)
+    })
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    dropArea.addEventListener('dragenter', highlight, false);
+    dropArea.addEventListener('dragover', highlight, false);
+
+    dropArea.addEventListener('dragleave', unhighlight, false)
+    dropArea.addEventListener('drop', unhighlight, false)
+
+    function highlight(e) {
+        dropArea.classList.add('is-warning')
+    }
+
+    function unhighlight(e) {
+        dropArea.classList.remove('is-warning')
+    }
+
+    dropArea.addEventListener('drop', handleDrop, false)
+
+    function handleDrop(e) {
+        let dt = e.dataTransfer
+        let files = dt.files
+
+        handleFiles(files)
+    }
+
+    function handleFiles(files) {
+        //([...files]).forEach(uploadFile)
+        //uploadToBrowser(files[0]);
+        document.querySelector('#upload input[type=file]').files = files;
+        let fileName = document.querySelector('#upload .file-name');
+        fileName.textContent = files[0].name;
+        let event = new Event('change', { bubbles: true });
+        document.querySelector('#upload input[type=file]').dispatchEvent(event);
+    }
+
+    function uploadFile(file) {
+        let url = 'YOUR URL HERE'
+        let formData = new FormData()
+
+        formData.append('file', file)
+
+        fetch(url, {
+            method: 'POST',
+            body: formData
+        })
+            .then(() => { /* Done. Inform the user */ })
+            .catch((e) => { console.log(e) })
+    }
+
+    function uploadToBrowser(file) {
+        console.log(file);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            console.log(event);
+            //console.log(event.target.result);
+            document.getElementById("input").src = event.target.result;
+        };
+
+    }
+
+    //       document.getElementById("droparea").addEventListener('drop')
+    function process() {
+        document.getElementById("process-btn").classList.add("is-loading");
+        console.log("I'm connected");
+        let file = document.querySelector('#upload input[type=file]').files[0];
+        console.log(file);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            console.log(event);
+            //console.log(event.target.result);
+            document.getElementById("input").src = event.target.result;
+            document.getElementById("process-btn").classList.remove("is-loading");
+        };
+    }
+
+    document.querySelectorAll("#nav li").forEach(function (navEl) {
+        navEl.onclick = function () { toggleTab(this.id, this.dataset.target); }
+    });
+
+    function toggleTab(selectedNav, targetId) {
+        var navEls = document.querySelectorAll("#nav li");
+
+        navEls.forEach(function (navEl) {
+            if (navEl.id == selectedNav) {
+                navEl.classList.add("is-active");
+            } else {
+                if (navEl.classList.contains("is-active")) {
+                    navEl.classList.remove("is-active");
+                }
+            }
+        });
+
+        var tabs = document.querySelectorAll(".panel-block");
+
+        tabs.forEach(function (tab) {
+            if (tab.id == targetId) {
+                tab.classList.remove("is-hidden");
+            } else {
+                tab.classList.add("is-hidden");
+            }
+        });
+    }
+
+    document.getElementById("process-txt-btn").onclick = async () => {
+        let urlParams = new URLSearchParams(location.search);
+        let recipient = urlParams.get("r");
+        let sender = urlParams.get("s");
+        let epoch = urlParams.get("t");
+        let recipientPubkey = urlParams.get("k");
+        let message = encodeURIComponent(document.getElementById("plaintext").value);
+        // Get stored key
+        let exchange = await loadExchangeKey(recipient + sender + epoch);
+        console.log("exchange", exchange);
+        // Derive shared secret
+        let aesKey = await decodeAndDerive(recipientPubkey, exchange.privateKey);
+        console.log("aes key", aesKey);
+        // Get IV
+        let iv = generateIV();
+        let encodedIv = bufToBase64Url(iv);
+        console.log("iv", encodedIv)
+        // Encrypt message
+        let ciphertext = await encryptMessage(message, iv, aesKey);
+        let encodedCiphertext = bufToBase64Url(ciphertext);
+        console.log("Encoded", encodedCiphertext);
+
+        // Construct e-mail URI
+        let next_url = "http://localhost:3000/decrypt/?s=" + sender + "&r=" + recipient + "&iv=" +
+            encodedIv + "&m=" + encodedCiphertext + "&t=" + epoch
+        let subject = "Here is the encrypted message"
+        let body = "Hello,\r\n" +
+            "Our secret message is embedded in the link below. " +
+            "If you click the link, you will be able to decrypt and read the content. " +
+            "Please note that the link expires within 48 hours.\r\n\r\n " + next_url + " \r\n\r\n" +
+            "Thank you!"
+        let mailto = genMailtoURL(sender, subject, body);
+        document.getElementById("plaintext").value = bufToBase64Url(iv) + "." + encodedCiphertext;
+        document.getElementById("email-txt-btn").href = mailto;
+        document.getElementById("email-txt-btn").disabled = false;
+        document.getElementById("process-txt-btn").disabled = true;
+    }
+</script>
+
+</html>

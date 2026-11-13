@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm interaction - Send Me Safe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+    <script src="keytools.js"></script>
+    <script>
+
+        function setMailtoRef(sender, recipient, pub_b64, epoch, elemid) {
+            let next_url = "http://localhost:3000/upload/?s=" + sender + "&r=" + recipient + "&k=" +
+                pub_b64 + "&t=" + epoch
+            let subject = "I am prepared to receive your document"
+            let body = "Hello,\r\n" +
+                "I am prepared to receive your encrypted document. " +
+                "If you click the link below, you will be able to upload the document " +
+                "and share it with me.\r\n\r\n " + next_url + " \r\n\r\n" +
+                "Thank you!"
+            let mailto = genMailtoURL(sender, subject, body);
+            document.getElementById(elemid).href = mailto;
+        }
+
+    </script>
+</head>
+
+<body>
+    <nav class="navbar has-background-info" role="navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <span class="icon is-large">
+                    <span class="fa-stack">
+                        <i class="fas fa-circle fa-stack-2x has-text-light"></i>
+                        <i class="fas fa-key fa-stack-1x has-text-info"></i>
+                    </span>
+                </span>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    How it works
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    Premium
+                </a>
+            </div>
+            <div class="navbar-item">
+                <a class="navbar-item has-text-light" onclick="">
+                    About
+                </a>
+            </div>
+        </div>
+    </nav>
+    <section class="hero is-info">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">
+                    Accept encrypted content from <span id="sender">John.Doe@example.com</span>
+                </h1>
+                <h2 class="subtitle">
+                    Both parties will derive a shared key that will be available
+                    only to you even if someone else is able observe your communication.
+                </h2>
+            </div>
+        </div>
+    </section>
+
+    <div class="section columns has-background-dark">
+        <div class="column">
+            <article class="message is-info">
+                <div class="message-body">
+                    <div class="block">
+                        Please confirm that you accept to receive a secure message from
+                        John.Doe@example.com, generate a temporary key and send a response
+                        e-mail by clicking the button below. Please note that you need
+                        to use the same browser throughout the process.
+                    </div>
+
+                    <div class="columns is-mobile is-flex-wrap-wrap">
+                        <div class="column is-flex-grow-0">
+                            <div class="block">
+                                <button id="button_process" class="button is-info is-disabled">Confirm</button>
+                            </div>
+                        </div>
+                        <div class="column is-flex-grow-0">
+                            <div class="block">
+                                <a id="button_send_email" class="button is-info" href="#">
+                                    Open e-mail
+                                </a>
+                            </div>
+                        </div>
+                        <div class="column is-flex-grow-5">
+                            <div class="block has-text-dark has-text-right is-size-7">
+                                Supported browsers<br>
+                                <i class="fab fa-chrome fa-2x"></i>
+                                <i class="fab fa-firefox fa-2x"></i>
+                                <i class="fab fa-safari fa-2x"></i>
+                                <i class="fab fa-opera fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("button_process").onclick = async () => {
+            let urlParams = new URLSearchParams(location.search);
+            let recipient = urlParams.get("r");
+            let sender = urlParams.get("s");
+            console.log("Creating keypair for communication with", recipient, "by", sender);
+            let keypair = await generateECKey();
+            let privKeyPKCS8 = await crypto.subtle.exportKey("pkcs8", keypair.privateKey);
+            let privKeyPKCS8b64 = bufToBase64Url(privKeyPKCS8);
+            let epoch = urlParams.get("t");
+            let recipientPubkey = urlParams.get("k");
+            let exchangeData = { 
+                privateKey: privKeyPKCS8b64, 
+                publicKey: recipientPubkey, 
+                timestamp: epoch }
+            let myPubkeyRaw = await crypto.subtle.exportKey("raw", keypair.publicKey);
+            let myPubkeyRawB64 = bufToBase64Url(myPubkeyRaw);
+            console.log("Key generation complete. Public component:", myPubkeyRawB64);
+
+            removeOldKeys(3600 * 48);
+            let storageKey = recipient + sender + epoch;
+            await storeExchangeKey(storageKey, exchangeData);
+            setMailtoRef(sender, recipient, myPubkeyRawB64, epoch, "button_send_email");
+        }
+    </script>
+
+</body>
+
+</html>
