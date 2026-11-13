@@ -28,6 +28,9 @@ function contentSecurityPolicy(): Plugin {
 }
 
 export default defineConfig({
+  // Sub-path the site is served from, e.g. "/send-me-safe/" on GitHub Pages
+  // without a custom domain. Defaults to the root.
+  base: process.env.BASE_PATH ?? "/",
   plugins: [contentSecurityPolicy()],
   build: {
     target: "es2022",

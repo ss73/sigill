@@ -22,6 +22,17 @@ First-time e2e setup: `npx playwright install chromium`.
 `VITE_RP_ID` is the domain every inbox passkey is bound to. Choose it once:
 changing it later makes existing inboxes unreachable.
 
+## Deployment
+
+Pushing to `main` runs `.github/workflows/deploy.yml`: unit tests, e2e tests
+against the production build, then a deploy to GitHub Pages at
+https://ss73.github.io/send-me-safe/.
+
+That address is for testing only: passkeys are bound to `ss73.github.io`,
+which every Pages project of the account shares. Before real use, point a
+dedicated custom domain at the site and update `VITE_RP_ID` (and drop
+`BASE_PATH`) in the workflow.
+
 ## Layout
 
 - `src/crypto/` – encoding, X25519 inbox keys, v1 message envelope (no DOM)
