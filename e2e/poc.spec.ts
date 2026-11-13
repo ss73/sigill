@@ -19,7 +19,7 @@ async function addAuthenticator(page: Page, hasPrf: boolean) {
 
 test("creates an inbox, round-trips a message, and re-derives the same key after reload", async ({ page }) => {
   await addAuthenticator(page, true);
-  await page.goto("/");
+  await page.goto("/poc.html");
   await expect(page.locator("#support")).toContainText("X25519");
 
   await page.fill("#label", "test@example.com");
@@ -51,14 +51,14 @@ test("creates an inbox, round-trips a message, and re-derives the same key after
 
 test("refuses an authenticator without PRF", async ({ page }) => {
   await addAuthenticator(page, false);
-  await page.goto("/");
+  await page.goto("/poc.html");
   await page.click("#create");
   await expect(page.locator("#inbox-error")).toContainText("PRF");
   await expect(page.locator("#inbox")).toBeHidden();
 });
 
 test("decrypting without an unlocked inbox explains what to do", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/poc.html");
   await page.fill("#envelope", "AQ");
   await page.click("#decrypt");
   await expect(page.locator("#open-error")).toContainText("unlock an inbox");

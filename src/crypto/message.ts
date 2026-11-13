@@ -40,6 +40,14 @@ async function messageKey(secret: Bytes, ephemeralPublic: Uint8Array, recipientP
   );
 }
 
+/**
+ * Cheap structural check (length and version) that needs no key, so a
+ * visibly broken message can be reported before asking for the passkey.
+ */
+export function isWellFormed(envelope: Uint8Array): boolean {
+  return envelope.length >= MIN_LENGTH && envelope[0] === VERSION;
+}
+
 /** Encrypts plaintext so that only the holder of the recipient's inbox key can read it. */
 export async function seal(recipientPublic: Uint8Array, plaintext: Uint8Array): Promise<Bytes> {
   const ephemeral = await generateEphemeralKeyPair();

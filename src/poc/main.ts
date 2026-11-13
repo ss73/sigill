@@ -1,4 +1,4 @@
-import { RP_ID, rpIdProblem } from "./config";
+import { RP_ID, rpIdProblem } from "../config";
 import {
   fingerprint,
   fromBase64Url,
@@ -8,7 +8,7 @@ import {
   seedFromPrf,
   toBase64Url,
   type InboxKeyPair,
-} from "./crypto";
+} from "../crypto";
 import {
   PasskeyError,
   browserPrfSupport,
@@ -16,7 +16,7 @@ import {
   describeCredential,
   unlockInboxPasskey,
   type PrfResult,
-} from "./passkey";
+} from "../passkey";
 
 function $<T extends HTMLElement = HTMLElement>(id: string): T {
   const el = document.getElementById(id);

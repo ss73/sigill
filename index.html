@@ -4,79 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
+    <meta name="description" content="Private messages over ordinary e-mail, encrypted in your browser and opened with your passkey.">
     <title>Send Me Safe</title>
-    <link rel="stylesheet" href="/src/style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f5fbf' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3'/%3E%3Crect x='4' y='10' width='16' height='11' rx='2'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/src/app/app.css">
   </head>
   <body>
-    <main>
-      <header>
-        <h1>Send Me Safe</h1>
-        <p class="lead">Passkey proof of concept: derive an inbox key from a passkey, then encrypt and decrypt with it. Nothing is stored by this page.</p>
-      </header>
-
-      <section aria-labelledby="support-title">
-        <h2 id="support-title">1. Browser support</h2>
-        <dl id="support" class="facts"></dl>
-        <p id="rp-problem" class="error" hidden></p>
-      </section>
-
-      <section aria-labelledby="inbox-title">
-        <h2 id="inbox-title">2. Your inbox</h2>
-        <p>Create a new inbox passkey once, or unlock one you created before (on this or another synced device).</p>
-        <label for="label">Name shown in your password manager</label>
-        <input id="label" type="text" autocomplete="email" placeholder="you@example.com">
-        <div class="actions">
-          <button id="create" type="button">Create inbox passkey</button>
-          <button id="unlock" type="button" class="secondary">Unlock existing inbox</button>
-          <button id="lock" type="button" class="secondary" hidden>Lock</button>
-        </div>
-        <p id="inbox-error" class="error" hidden></p>
-        <div id="inbox" hidden>
-          <dl class="facts">
-            <dt>Fingerprint</dt>
-            <dd><code id="fingerprint" class="fingerprint"></code></dd>
-            <dt>Public key</dt>
-            <dd><code id="public-key" class="wrap"></code></dd>
-            <dt>Passkey</dt>
-            <dd><code id="credential"></code></dd>
-          </dl>
-          <p class="hint">Unlocking with the same passkey on any device must show the same fingerprint. That is the core thing to verify.</p>
-        </div>
-      </section>
-
-      <section aria-labelledby="send-title">
-        <h2 id="send-title">3. Encrypt (sender side, no passkey needed)</h2>
-        <label for="recipient">Recipient public key</label>
-        <input id="recipient" type="text" spellcheck="false" placeholder="Unlock an inbox to fill this in, or paste someone else's">
-        <label for="plaintext">Message</label>
-        <textarea id="plaintext" rows="3">Hello from the other side… 🔐</textarea>
-        <div class="actions">
-          <button id="encrypt" type="button">Encrypt</button>
-        </div>
-        <p id="send-error" class="error" hidden></p>
-      </section>
-
-      <section aria-labelledby="open-title">
-        <h2 id="open-title">4. Decrypt (recipient side, needs the unlocked inbox)</h2>
-        <label for="envelope">Encrypted message</label>
-        <textarea id="envelope" rows="4" spellcheck="false" class="mono"></textarea>
-        <p id="envelope-size" class="hint"></p>
-        <div class="actions">
-          <button id="decrypt" type="button">Decrypt</button>
-        </div>
-        <p id="open-error" class="error" hidden></p>
-        <pre id="decrypted" class="result" hidden></pre>
-      </section>
-
-      <section aria-labelledby="log-title">
-        <h2 id="log-title">Test report</h2>
-        <p class="hint">Copy this into your notes for each browser/device combination you try.</p>
-        <pre id="log" class="log"></pre>
-        <div class="actions">
-          <button id="copy-log" type="button" class="secondary">Copy report</button>
-        </div>
-      </section>
-    </main>
-    <script type="module" src="/src/main.ts"></script>
+    <main id="app"></main>
+    <noscript>Send Me Safe encrypts messages in your browser and needs JavaScript.</noscript>
+    <script type="module" src="/src/app/main.ts"></script>
   </body>
 </html>

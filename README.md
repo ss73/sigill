@@ -33,12 +33,30 @@ which every Pages project of the account shares. Before real use, point a
 dedicated custom domain at the site and update `VITE_RP_ID` (and drop
 `BASE_PATH`) in the workflow.
 
+## How it works for users
+
+- **Receive:** Home → *Receive secure messages* → e-mail (optional) →
+  *Create my inbox* → passkey prompt → *Share my link*.
+- **Send:** click someone's secure link → write → *Send by e-mail* (the mail
+  program opens with the encrypted link ready; long messages are copied for
+  pasting instead).
+- **Read:** click the link in the e-mail → *Open message* → passkey prompt.
+- **First contact:** Home → *Send a secure message* → *Ask by e-mail*. The
+  invitation leads the recipient through setup and ends with a one-click
+  *Send my link to …*.
+
+All data travels in the URL fragment (`#to=…`, `#m=…`), which browsers
+never send to the server.
+
 ## Layout
 
 - `src/crypto/` – encoding, X25519 inbox keys, v1 message envelope (no DOM)
 - `src/passkey.ts` – passkey creation/unlock and PRF evaluation
 - `src/config.ts` – relying party ID
-- `src/main.ts`, `index.html` – proof-of-concept page
+- `src/app/` – the app: routing (`links.ts`), e-mail templates (`mail.ts`),
+  compressed message payload (`payload.ts`), in-memory session, views
+- `src/poc/`, `poc.html` – passkey diagnostics page, served at `/poc.html`,
+  used for the device test matrix below
 - `e2e/` – Playwright tests
 
 ## Device test matrix
@@ -48,7 +66,7 @@ site served over HTTPS from a real domain.
 
 For each combination: create (or unlock) an inbox, encrypt, decrypt, then
 unlock on another device with the same synced passkey and compare the
-fingerprint. Paste the page's test report into notes.
+fingerprint. Use `/poc.html` and paste its test report into notes.
 
 | Platform | Browser | Passkey provider | Result |
 |---|---|---|---|

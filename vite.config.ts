@@ -34,6 +34,13 @@ export default defineConfig({
   plugins: [contentSecurityPolicy()],
   build: {
     target: "es2022",
+    rollupOptions: {
+      input: {
+        app: "index.html",
+        // Passkey diagnostics page for the device test matrix.
+        poc: "poc.html",
+      },
+    },
   },
   test: {
     environment: "node",

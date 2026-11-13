@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fromBase64Url, toBase64Url, utf8Encode } from "./encoding";
 import { keyPairFromSeed } from "./keys";
-import { VERSION, open, openText, seal, sealText } from "./message";
+import { VERSION, isWellFormed, open, openText, seal, sealText } from "./message";
 
 async function newInbox() {
   return keyPairFromSeed(crypto.getRandomValues(new Uint8Array(32)));
@@ -69,5 +69,17 @@ describe("seal / open", () => {
     const inbox = await newInbox();
     const envelope = await seal(inbox.publicKey, utf8Encode("over e-mail"));
     expect(await open(inbox, fromBase64Url(toBase64Url(envelope)))).toEqual(utf8Encode("over e-mail"));
+  });
+});
+
+describe("isWellFormed", () => {
+  it("accepts real envelopes and rejects short or unknown ones", async () => {
+    const inbox = await keyPairFromSeed(new Uint8Array(32).fill(1));
+    const envelope = await seal(inbox.publicKey, new Uint8Array(0));
+    expect(isWellFormed(envelope)).toBe(true);
+    expect(isWellFormed(envelope.slice(0, 40))).toBe(false);
+    const other = envelope.slice();
+    other[0] = 7;
+    expect(isWellFormed(other)).toBe(false);
   });
 });
