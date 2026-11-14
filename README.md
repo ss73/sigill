@@ -42,11 +42,11 @@ dedicated custom domain at the site and update `VITE_RP_ID` (and drop
   pasting instead).
 - **Read:** click the link in the e-mail → *Open message* → passkey prompt.
 - **Reply:** *Reply securely* under the message → write → *Send by e-mail*.
-- **Signature:** *Copy signature* on your link page → paste into Gmail, Outlook
-  or Apple Mail signature settings. The seal and text link to your inbox.
   Senders who have an inbox include it in the (encrypted) message; this is
   on by default once their inbox is unlocked, or added with one passkey
   confirmation, so a conversation can go back and forth one click at a time.
+- **Signature:** *Copy signature* on your link page → paste into Gmail, Outlook
+  or Apple Mail signature settings. The seal and text link to your inbox.
 - **First contact:** Home → *Send a secure message* → *Ask by e-mail*. The
   invitation leads the recipient through setup and ends with a one-click
   *Send my link to …*.
