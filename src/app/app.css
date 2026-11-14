@@ -425,3 +425,32 @@ textarea {
 .slot + .help {
   margin-top: 1rem;
 }
+
+.signature {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #fff; /* as it appears in an e-mail */
+  text-decoration: none;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.signature span {
+  display: flex;
+  flex-direction: column;
+}
+
+.signature strong {
+  color: #b3172f;
+}
+
+.signature small {
+  color: #6b7280;
+  font-size: 0.7rem;
+}

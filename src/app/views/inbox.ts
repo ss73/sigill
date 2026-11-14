@@ -4,7 +4,7 @@ import { fingerprint, type InboxKeyPair } from "../../crypto";
 import { rpIdProblem } from "../../config";
 import { h } from "../dom";
 import { appBase, inboxLink, isEmail } from "../links";
-import { inboxLinkEmail, mailto } from "../mail";
+import { SIGNATURE_TEXT, inboxLinkEmail, mailto, signature } from "../mail";
 import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
 import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
@@ -90,6 +90,7 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
   });
   const slot = messageSlot();
   const codeSlot = h("div");
+  const sig = signatureCard(link);
 
   function link(): string {
     const email = emailInput.value.trim();
@@ -102,6 +103,7 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
     }
     linkInput.value = link();
     share.href = mailto(opts.reply, inboxLinkEmail(link()));
+    sig.preview.href = link();
   }
   emailInput.addEventListener("input", update);
   linkInput.addEventListener("focus", () => linkInput.select());
@@ -130,8 +132,34 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
       actions(share, copyButton("Copy link", link, { testId: "copy-link" })),
       slot.el,
       opts.email ? null : field("Your e-mail address", emailInput, "Optional. Added to the link so messages are addressed to you automatically."),
-      h("p", { class: "help" }, "Tip: put the link in your e-mail signature so anyone can write to you securely."),
       codeSlot,
     ),
+    sig.card,
   );
+}
+
+/** A ready-made signature, so anyone who gets an e-mail from you can write back securely. */
+function signatureCard(link: () => string): { card: HTMLElement; preview: HTMLAnchorElement } {
+  const image = `${appBase()}sigill-mail.png`;
+  const preview = h(
+    "a",
+    { class: "signature", href: "#", "data-testid": "signature-preview" },
+    h("img", { src: image, alt: "", width: 32, height: 32 }),
+    h("span", null, h("strong", null, SIGNATURE_TEXT), h("small", null, "Encrypted end to end with Sigill")),
+  );
+  const card = h(
+    "section",
+    { class: "card" },
+    h("h2", null, "Add it to your e-mail signature"),
+    h("p", { class: "help" }, "Then everyone who gets an e-mail from you can write back securely with one click."),
+    preview,
+    actions(copyButton("Copy signature", () => signature(link(), image), { testId: "copy-signature" })),
+    h(
+      "p",
+      { class: "help" },
+      "Paste it into your signature settings: in Gmail under Settings → Signature, in Outlook under Settings → Mail → Compose and reply, ",
+      "in Apple Mail under Settings → Signatures.",
+    ),
+  );
+  return { card, preview };
 }

@@ -198,3 +198,30 @@ test("secure reply offers to create an inbox when the sender has none", async ({
   await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
   await expect(page.getByTestId("message")).toHaveValue("draft stays");
 });
+
+test("signature: copies a linked logo and text that open the inbox", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await addAuthenticator(page);
+  const inboxUrl = await createInbox(page, "alice@example.com");
+  await expect(page.getByTestId("signature-preview")).toHaveAttribute("href", inboxUrl);
+
+  await page.getByTestId("copy-signature").click();
+  await expect(page.getByTestId("copy-signature")).toHaveText("Copied");
+  const { html, text } = await page.evaluate(async () => {
+    const item = (await navigator.clipboard.read())[0]!;
+    return {
+      html: await (await item.getType("text/html")).text(),
+      text: await (await item.getType("text/plain")).text(),
+    };
+  });
+  expect(text).toBe(`Send me a secure message: ${inboxUrl}`);
+
+  // Paste it like a mail program would, then follow the logo link.
+  await page.setContent(html);
+  const logo = page.locator("a:has(img)");
+  const src = await logo.locator("img").getAttribute("src");
+  expect((await page.request.get(src!)).headers()["content-type"]).toBe("image/png");
+  const reader = await context.newPage();
+  await reader.goto((await logo.getAttribute("href"))!);
+  await expect(reader.getByRole("heading", { level: 1 })).toHaveText("Secure message to alice@example.com");
+});

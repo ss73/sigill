@@ -61,19 +61,29 @@ export function linkButton(
 /** Copies text with visible confirmation; selects a fallback field if the clipboard is unavailable. */
 export function copyButton(
   label: string,
-  getText: () => string,
+  getText: () => string | { text: string; html: string },
   opts: { variant?: "primary" | "secondary"; testId?: string } = {},
 ): HTMLButtonElement {
   const btn = button(
     label,
     async () => {
-      const text = getText();
-      if (!text) {
+      const content = getText();
+      if (!content) {
         return;
       }
       const span = btn.querySelector("span")!;
       try {
-        await navigator.clipboard.writeText(text);
+        if (typeof content === "string") {
+          await navigator.clipboard.writeText(content);
+        } else {
+          // Rich copy, so the paste keeps the formatting; plain text for everything else.
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "text/html": new Blob([content.html], { type: "text/html" }),
+              "text/plain": new Blob([content.text], { type: "text/plain" }),
+            }),
+          ]);
+        }
         span.textContent = "Copied";
         btn.replaceChild(icon("check"), btn.firstChild!);
       } catch {
