@@ -35,15 +35,19 @@ dedicated custom domain at the site and update `VITE_RP_ID` (and drop
 
 ## How it works for users
 
-- **Receive:** Home → *Receive secure messages* → e-mail (optional) →
-  *Create my inbox* → passkey prompt → *Share my link*.
+- **Receive:** Home → *Receive secure messages* → e-mail (required) →
+  *Create my inbox* → passkey prompt → *Share my link*. The browser then
+  remembers the inbox's public part (link key and e-mail, in localStorage),
+  so a revisit shows the link without a prompt; *Forget this inbox on this
+  browser* removes it. The e-mail is also stored in the passkey's user ID,
+  so unlocking on another device brings it back.
 - **Send:** click someone's secure link → write → *Send by e-mail* (the mail
   program opens with the encrypted link ready; long messages are copied for
   pasting instead).
 - **Read:** click the link in the e-mail → *Open message* → passkey prompt.
 - **Reply:** *Reply securely* under the message → write → *Send by e-mail*.
   Senders who have an inbox include it in the (encrypted) message; this is
-  on by default once their inbox is unlocked, or added with one passkey
+  on by default whenever the browser knows their inbox, or added with one passkey
   confirmation, so a conversation can go back and forth one click at a time.
 - **Signature:** *Copy signature* on your link page → paste into Gmail, Outlook
   or Apple Mail signature settings. The seal and text link to your inbox.

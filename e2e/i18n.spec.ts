@@ -23,12 +23,13 @@ test.describe("with a Swedish browser", () => {
     await addAuthenticator(page);
     await page.goto("/");
     await page.getByTestId("choose-receive").click();
+    await page.getByTestId("your-email").fill("me@example.com");
     await page.getByTestId("create-inbox").click();
     await page.goto((await page.getByTestId("inbox-link").inputValue()));
     await page.getByTestId("message").fill("Draft that must survive");
 
     await page.getByTestId("ui-language").selectOption("en");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title());
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title("me@example.com"));
     await expect(page.getByTestId("message")).toHaveValue("Draft that must survive");
     await expect(page.getByTestId("send-email")).not.toHaveAttribute("aria-disabled", "true");
 
@@ -41,11 +42,12 @@ test("the e-mail goes out in the recipient's language, and the link opens in it"
   await addAuthenticator(page);
   await page.goto("/");
   await page.getByTestId("choose-receive").click();
+  await page.getByTestId("your-email").fill("me@example.com");
   await page.getByTestId("create-inbox").click();
   const inboxUrl = await page.getByTestId("inbox-link").inputValue();
 
   await page.goto(inboxUrl);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title());
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title("me@example.com"));
   await page.getByTestId("message").fill("Hallo!");
   await page.getByTestId("email-language").selectOption("de");
   const send = page.getByTestId("send-email");
@@ -55,7 +57,7 @@ test("the e-mail goes out in the recipient's language, and the link opens in it"
   const link = firstLink(mail.body);
   expect(link).toMatch(/&l=de$/);
   // The UI itself stays in English.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title());
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.compose.title("me@example.com"));
 
   // An English-language browser opening the link sees German, like the e-mail.
   const reader = await (await browser.newContext({ locale: "en-US" })).newPage();
@@ -68,6 +70,7 @@ test("the signature follows the e-mail language", async ({ page, context }) => {
   await addAuthenticator(page);
   await page.goto("/");
   await page.getByTestId("choose-receive").click();
+  await page.getByTestId("your-email").fill("me@example.com");
   await page.getByTestId("create-inbox").click();
   await page.getByTestId("link-language").selectOption("sv");
   await expect(page.getByTestId("signature-preview")).toContainText(sv.mail.signature);

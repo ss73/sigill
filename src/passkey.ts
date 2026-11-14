@@ -26,6 +26,8 @@ export class PasskeyError extends Error {
 export interface PrfResult {
   prf: Bytes;
   credentialId: string;
+  /** The user ID stored with the passkey (see createInboxPasskey). */
+  userHandle: Bytes | null;
   /** Diagnostics: how the result was obtained. */
   details: Record<string, string>;
 }
@@ -105,9 +107,11 @@ async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Prom
   if (!first) {
     throw new PasskeyError("prf-unsupported", "This passkey or password manager does not support the PRF extension.");
   }
+  const userHandle = (credential.response as AuthenticatorAssertionResponse).userHandle;
   return {
     prf: toBytes(first),
     credentialId: credential.id,
+    userHandle: userHandle ? toBytes(userHandle) : null,
     details: {
       step: "get",
       authenticatorAttachment: credential.authenticatorAttachment ?? "unreported",
@@ -120,13 +124,13 @@ async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Prom
  * platforms return the PRF result during creation; others only report that
  * PRF is enabled, which costs the user a second prompt.
  */
-export async function createInboxPasskey(rpId: string, label: string): Promise<PrfResult> {
+export async function createInboxPasskey(rpId: string, label: string, userId: Bytes = randomBytes(16)): Promise<PrfResult> {
   requireWebAuthn();
   try {
     const credential = (await navigator.credentials.create({
       publicKey: {
         rp: { id: rpId, name: "Sigill" },
-        user: { id: randomBytes(16), name: label, displayName: label },
+        user: { id: userId, name: label, displayName: label },
         challenge: randomBytes(32),
         pubKeyCredParams: [
           { type: "public-key", alg: -8 }, // Ed25519
@@ -149,7 +153,7 @@ export async function createInboxPasskey(rpId: string, label: string): Promise<P
     };
 
     if (prf?.results?.first) {
-      return { prf: toBytes(prf.results.first), credentialId: credential.id, details: { ...details, step: "create" } };
+      return { prf: toBytes(prf.results.first), credentialId: credential.id, userHandle: userId, details: { ...details, step: "create" } };
     }
     if (prf?.enabled === false) {
       const discarded = await discardCredential(rpId, credential.id);

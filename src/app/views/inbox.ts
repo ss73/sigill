@@ -1,26 +1,37 @@
-/** Create a secure inbox, or unlock an existing one to get its link again. */
+/**
+ * Your inbox: create it, or see its secure link. Once created or unlocked,
+ * this browser remembers the link (see session), so coming back shows it
+ * straight away without a passkey prompt.
+ */
 
-import { fingerprint, type InboxKeyPair } from "../../crypto";
+import { fingerprint } from "../../crypto";
 import { rpIdProblem } from "../../config";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang, type Messages } from "../i18n";
 import { appBase, inboxLink, isEmail } from "../links";
 import { inboxLinkEmail, mailto, signature } from "../mail";
-import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
+import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, unlockInbox, type KnownInbox } from "../session";
 import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
-export function inboxView(opts: { reply?: string; email?: string }): HTMLElement {
+interface Opts {
+  /** Someone who asked for your link (from an invitation). */
+  reply?: string;
+  /** Your own e-mail, if the invitation knew it. */
+  email?: string;
+}
+
+export function inboxView(opts: Opts): HTMLElement {
   const root = h("div");
-  const inbox = currentInbox();
-  const known = { ...opts, email: opts.email ?? sessionEmail() };
-  root.append(inbox ? readyView(inbox, known, false) : setupView(known, root));
+  const known = knownInbox();
+  root.append(known ? readyView(known, opts, false, root) : setupView({ ...opts, email: opts.email ?? sessionEmail() }, root));
   return root;
 }
 
-function setupView(opts: { reply?: string; email?: string }, root: HTMLElement): HTMLElement {
+function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   const emailInput = h("input", {
     type: "email",
     autocomplete: "email",
+    required: true,
     placeholder: t.common.emailPlaceholder,
     value: opts.email ?? "",
     "data-testid": "your-email",
@@ -28,21 +39,30 @@ function setupView(opts: { reply?: string; email?: string }, root: HTMLElement):
   const slot = messageSlot();
   const problem = rpIdProblem();
 
-  async function run(action: () => Promise<InboxKeyPair>, created: boolean): Promise<void> {
+  async function run(action: () => Promise<unknown>, created: boolean): Promise<void> {
     slot.show(null);
     try {
-      const inbox = await action();
-      root.replaceChildren(readyView(inbox, { ...opts, email: emailInput.value.trim() || opts.email }, created));
+      await action();
+      root.replaceChildren(readyView(knownInbox()!, opts, created, root));
       root.querySelector("h1")?.focus();
     } catch (error) {
       slot.show(notice("error", passkeyErrorMessage(error)));
     }
   }
 
-  const create = button(t.inbox.create, () => run(() => createInbox(emailInput.value.trim()), true), {
-    icon: "key",
-    testId: "create-inbox",
-  });
+  const create = button(
+    t.inbox.create,
+    () => {
+      const email = emailInput.value.trim();
+      if (!isEmail(email)) {
+        slot.show(notice("error", t.inbox.emailMissing));
+        emailInput.focus();
+        return;
+      }
+      return run(() => createInbox(email), true);
+    },
+    { icon: "key", testId: "create-inbox" },
+  );
   const unlock = button(t.inbox.unlock, () => run(unlockInbox, false), {
     variant: "text",
     testId: "unlock-inbox",
@@ -54,9 +74,7 @@ function setupView(opts: { reply?: string; email?: string }, root: HTMLElement):
 
   return page(
     backLink(),
-    opts.reply
-      ? notice("info", t.inbox.invited(opts.reply))
-      : null,
+    opts.reply ? notice("info", t.inbox.invited(opts.reply)) : null,
     title(t.inbox.setupTitle, t.inbox.setupLead),
     h(
       "section",
@@ -69,6 +87,7 @@ function setupView(opts: { reply?: string; email?: string }, root: HTMLElement):
         { class: "facts" },
         h("li", null, t.inbox.fact1),
         h("li", null, t.inbox.fact2),
+        h("li", null, t.inbox.factRemembered),
         h("li", null, h("strong", null, t.inbox.fact3Strong), t.inbox.fact3),
       ),
       actions(unlock),
@@ -76,14 +95,18 @@ function setupView(opts: { reply?: string; email?: string }, root: HTMLElement):
   );
 }
 
-function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }, created: boolean): HTMLElement {
-  const emailInput = h("input", {
-    type: "email",
-    autocomplete: "email",
-    placeholder: t.common.emailPlaceholder,
-    value: opts.email ?? "",
-    "data-testid": "link-email",
-  });
+function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLElement): HTMLElement {
+  // Only passkeys from before e-mail was required lack it; ask once.
+  const emailInput = inbox.email
+    ? null
+    : h("input", {
+        type: "email",
+        autocomplete: "email",
+        required: true,
+        placeholder: t.common.emailPlaceholder,
+        value: opts.email ?? "",
+        "data-testid": "link-email",
+      });
   const linkInput = h("input", { type: "text", readOnly: true, "data-testid": "inbox-link" });
   const share = linkButton(opts.reply ? t.inbox.sendLinkTo(opts.reply) : t.inbox.shareLink, "#", {
     icon: "mail",
@@ -94,16 +117,19 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
   let emailLang: Lang = lang();
   const sig = signatureCard(link, () => emailLang);
 
+  function email(): string | undefined {
+    const value = inbox.email ?? emailInput?.value.trim();
+    return value && isEmail(value) ? value : undefined;
+  }
   function link(): string {
-    const email = emailInput.value.trim();
-    return inboxLink(appBase(), inbox.publicKey, isEmail(email) ? email : undefined);
+    return inboxLink(appBase(), inbox.publicKey, email());
   }
   let sequence = 0;
   async function update(): Promise<void> {
     const mine = ++sequence;
-    const email = emailInput.value.trim();
-    if (isEmail(email)) {
-      setSessionEmail(email);
+    const own = email();
+    if (own && !inbox.email) {
+      setInboxEmail(own);
     }
     linkInput.value = link();
     sig.preview.href = link();
@@ -114,7 +140,7 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
     share.href = mailto(opts.reply, inboxLinkEmail(link(), m));
     sig.render(m);
   }
-  emailInput.addEventListener("input", () => void update());
+  emailInput?.addEventListener("input", () => void update());
   linkInput.addEventListener("focus", () => linkInput.select());
   void update();
 
@@ -122,21 +148,25 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
     slot.show(notice("success", t.inbox.shared));
   });
 
-  void fingerprint(inbox.publicKey).then((code) =>
-    codeSlot.replaceChildren(
-      securityCode(code, t.inbox.codeHelp),
-    ),
+  void fingerprint(inbox.publicKey).then((code) => codeSlot.replaceChildren(securityCode(code, t.inbox.codeHelp)));
+
+  const forget = button(
+    t.inbox.forget,
+    () => {
+      forgetInbox();
+      root.replaceChildren(setupView({ email: inbox.email }, root));
+      root.querySelector("h1")?.focus();
+    },
+    { variant: "text", testId: "forget-inbox" },
   );
 
   return page(
     backLink(),
-    title(
-      created ? t.inbox.readyTitle : t.inbox.linkTitle,
-      t.inbox.readyLead,
-    ),
+    title(created ? t.inbox.readyTitle : t.inbox.linkTitle, t.inbox.readyLead),
     h(
       "section",
       { class: "card" },
+      emailInput ? field(t.common.yourEmail, emailInput, t.inbox.linkEmailHelp) : null,
       field(t.inbox.linkLabel, linkInput),
       field(
         t.common.emailLanguage,
@@ -147,10 +177,10 @@ function readyView(inbox: InboxKeyPair, opts: { reply?: string; email?: string }
       ),
       actions(share, copyButton(t.inbox.copyLink, link, { testId: "copy-link" })),
       slot.el,
-      opts.email ? null : field(t.common.yourEmail, emailInput, t.inbox.linkEmailHelp),
       codeSlot,
     ),
     sig.card,
+    actions(forget),
   );
 }
 

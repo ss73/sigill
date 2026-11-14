@@ -1,12 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { addAuthenticator, firstLink, parseMailto } from "./helpers";
 
-async function createInbox(page: Page, email?: string): Promise<string> {
+async function createInbox(page: Page, email = "me@example.com"): Promise<string> {
   await page.goto("/");
   await page.getByTestId("choose-receive").click();
-  if (email) {
-    await page.getByTestId("your-email").fill(email);
-  }
+  await page.getByTestId("your-email").fill(email);
   await page.getByTestId("create-inbox").click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your inbox is ready");
   return page.getByTestId("inbox-link").inputValue();
@@ -47,13 +45,19 @@ test("receive: create inbox, get written to, open the message after a reload", a
   expect(messageUrl).toContain("#m=");
   expect(mail.body).not.toContain("hunter2");
 
-  // Recipient opens it later: nothing remembered, passkey needed.
+  // Recipient opens it later: the key isn't remembered, so the passkey is needed.
   await page.goto(messageUrl);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("You've received a secure message");
   await page.getByTestId("open-message").click();
   await expect(page.getByTestId("message-text")).toHaveText("Hej Alice! Lösenordet är 🔐 hunter2");
-  expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
+
+  // The browser keeps only the public link (key and e-mail), nothing secret.
+  const stored = await page.evaluate(() => ({ ...localStorage }));
+  expect(Object.keys(stored)).toEqual(["sigill.inbox"]);
+  const inboxKey = new URLSearchParams(new URL(inboxUrl).hash.slice(1)).get("to");
+  expect(JSON.parse(stored["sigill.inbox"]!)).toEqual({ k: inboxKey, e: "alice@example.com" });
+  expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
 });
 
 test("first contact: ask for a link, recipient sets up and sends it back in one click", async ({ page }) => {
@@ -79,10 +83,10 @@ test("first contact: ask for a link, recipient sets up and sends it back in one 
 
 test("pasting a secure link on the send page opens the compose page", async ({ page }) => {
   await addAuthenticator(page);
-  const inboxUrl = await createInbox(page);
+  const inboxUrl = await createInbox(page, "dave@example.com");
   await page.goto("/#send");
   await page.getByTestId("recipient-link").fill(`  ${inboxUrl}  `);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Secure message to the owner of this link");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Secure message to dave@example.com");
 });
 
 test("a message for another inbox is explained, not shown", async ({ page }) => {
@@ -120,6 +124,7 @@ test("long messages fall back to copy and paste", async ({ page, context }) => {
 test("a passkey without PRF gets a clear explanation", async ({ page }) => {
   await addAuthenticator(page, false);
   await page.goto("/#inbox");
+  await page.getByTestId("your-email").fill("me@example.com");
   await page.getByTestId("create-inbox").click();
   await expect(page.getByRole("alert")).toContainText("can't hold a secure inbox");
 });
@@ -139,10 +144,10 @@ test("secure reply: a two-person conversation, each reply one click away", async
   const aliceLink = await createInbox(alice, "alice@example.com");
   await createInbox(bob, "bob@example.com");
 
-  // Bob writes to Alice. He unlocked his inbox this visit, so reply is on by default.
+  // Bob writes to Alice. His browser knows his inbox, so reply is on by default.
   await bob.goto(aliceLink);
+  await bob.reload();
   await expect(bob.getByTestId("reply-panel")).toContainText("Secure reply is on");
-  await expect(bob.getByTestId("reply-email")).toHaveValue("bob@example.com");
   const first = firstLink(parseMailto(await writeMessageHere(bob, "Hi Alice, what's the door code?")).body);
 
   // Alice reads it in a fresh visit and replies with one click.
@@ -153,9 +158,7 @@ test("secure reply: a two-person conversation, each reply one click away", async
   await expect(alice.getByRole("heading", { level: 1 }).locator("..")).toContainText("From bob@example.com");
   await alice.getByTestId("reply").click();
   await expect(alice.getByRole("heading", { level: 1 })).toHaveText("Secure message to bob@example.com");
-  // Her inbox is unlocked and her address came back inside Bob's message.
   await expect(alice.getByTestId("reply-panel")).toContainText("Secure reply is on");
-  await expect(alice.getByTestId("reply-email")).toHaveValue("alice@example.com");
   const answer = parseMailto(await writeMessageHere(alice, "It's 4711."));
   expect(answer.to).toBe("bob@example.com");
 
@@ -164,6 +167,7 @@ test("secure reply: a two-person conversation, each reply one click away", async
   await bob.reload();
   await bob.getByTestId("open-message").click();
   await expect(bob.getByTestId("message-text")).toHaveText("It's 4711.");
+  await expect(bob.getByRole("heading", { level: 1 }).locator("..")).toContainText("From alice@example.com");
   await expect(bob.getByTestId("reply")).toBeVisible();
 });
 
@@ -171,14 +175,19 @@ test("secure reply can be added with the passkey, or left out", async ({ page })
   await addAuthenticator(page);
   const ownLink = await createInbox(page, "carol@example.com");
 
-  // Fresh visit: nothing unlocked, so reply starts off and is added on request.
+  // A browser that doesn't know the inbox: reply starts off and is added with
+  // the passkey, which also brings back the e-mail address.
+  await page.getByTestId("forget-inbox").click();
   await page.goto(ownLink);
   await page.reload();
-  await expect(page.getByTestId("reply-add")).toBeVisible();
   await page.getByTestId("reply-add").click();
   await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
+  const withReply = await writeMessageHere(page, "reply wanted");
+  await page.goto(firstLink(parseMailto(withReply).body));
+  await expect(page.getByRole("heading", { level: 1 }).locator("..")).toContainText("From carol@example.com");
 
-  // Opting out again: the recipient is told there is no reply address.
+  // Opting out: the recipient is told there is no reply address.
+  await page.goto(ownLink);
   await page.getByTestId("reply-remove").click();
   await expect(page.getByTestId("reply-add")).toBeVisible();
   const href = await writeMessageHere(page, "no reply wanted");
@@ -194,6 +203,9 @@ test("secure reply offers to create an inbox when the sender has none", async ({
   await page.goto(`/#to=${stranger}`);
   await page.getByTestId("message").fill("draft stays");
   await page.getByTestId("reply-add").click(); // no passkey exists yet: the prompt fails
+  await page.getByTestId("reply-create").click();
+  await expect(page.getByRole("alert")).toContainText("enter your e-mail address");
+  await page.getByTestId("reply-own-email").fill("erin@example.com");
   await page.getByTestId("reply-create").click();
   await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
   await expect(page.getByTestId("message")).toHaveValue("draft stays");
@@ -224,4 +236,32 @@ test("signature: copies a linked logo and text that open the inbox", async ({ pa
   const reader = await context.newPage();
   await reader.goto((await logo.getAttribute("href"))!);
   await expect(reader.getByRole("heading", { level: 1 })).toHaveText("Secure message to alice@example.com");
+});
+
+test("an e-mail address is required to create an inbox", async ({ page }) => {
+  await addAuthenticator(page);
+  await page.goto("/#inbox");
+  await page.getByTestId("create-inbox").click();
+  await expect(page.getByRole("alert")).toContainText("Please enter your e-mail address first.");
+  await expect(page.getByTestId("your-email")).toBeFocused();
+  await expect(page.getByTestId("inbox-link")).toHaveCount(0);
+});
+
+test("a revisit shows your link without a passkey; forgetting it asks again", async ({ page }) => {
+  await addAuthenticator(page);
+  const inboxUrl = await createInbox(page, "frank@example.com");
+
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your secure link");
+  await expect(page.getByTestId("inbox-link")).toHaveValue(inboxUrl);
+
+  await page.getByTestId("forget-inbox").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create your secure inbox");
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Create your secure inbox");
+
+  // "I already have an inbox": the passkey brings back both the key and the e-mail.
+  await page.getByTestId("your-email").fill("");
+  await page.getByTestId("unlock-inbox").click();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(inboxUrl);
 });

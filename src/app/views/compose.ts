@@ -1,12 +1,12 @@
 /** Writing to an inbox: the page a secure link opens. No passkey needed. */
 
-import { fingerprint, type InboxKeyPair } from "../../crypto";
+import { fingerprint } from "../../crypto";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, isEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
-import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
+import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, unlockInbox, type KnownInbox } from "../session";
 import { PasskeyError } from "../../passkey";
 import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
@@ -23,48 +23,50 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   const codeSlot = h("div");
 
   // --- Secure reply ------------------------------------------------------------
-  // Included by default when the user already unlocked their inbox this visit
-  // (e.g. they just read a message and pressed "Reply securely").
-  let replyInbox: InboxKeyPair | null = currentInbox();
-  const replyEmail = h("input", {
-    type: "email",
-    autocomplete: "email",
-    placeholder: t.common.emailPlaceholder,
-    value: sessionEmail() ?? "",
-    "data-testid": "reply-email",
-  });
-  replyEmail.addEventListener("input", () => {
-    const value = replyEmail.value.trim();
-    if (isEmail(value)) {
-      setSessionEmail(value);
-    }
-    void update();
-  });
+  // On by default whenever this browser knows the user's inbox: a reply
+  // address is just the public link, so no passkey prompt is needed.
+  let replyInbox: KnownInbox | null = knownInbox();
   const replyPanel = h("div", { class: "reply", "data-testid": "reply-panel" });
   const replySlot = messageSlot();
 
-  async function attach(action: () => Promise<InboxKeyPair>): Promise<void> {
+  async function attach(action: () => Promise<unknown>): Promise<void> {
     replySlot.show(null);
     try {
-      replyInbox = await action();
-      replyEmail.value = replyEmail.value || sessionEmail() || "";
+      await action();
+      replyInbox = knownInbox();
       renderReply();
       void update();
     } catch (error) {
       const cancelled = error instanceof PasskeyError && error.code === "cancelled";
-      replySlot.show(
-        cancelled
-          ? notice(
-              "info",
-              t.compose.replyNoInbox,
-              button(t.compose.replyCreate, () => attach(() => createInbox(replyEmail.value.trim())), {
-                variant: "text",
-                testId: "reply-create",
-              }),
-            )
-          : notice("error", passkeyErrorMessage(error)),
-      );
+      replySlot.show(cancelled ? createOffer() : notice("error", passkeyErrorMessage(error)));
     }
+  }
+
+  /** No inbox yet: create one right here, keeping the draft. */
+  function createOffer(): HTMLElement {
+    const ownEmail = h("input", {
+      type: "email",
+      autocomplete: "email",
+      required: true,
+      placeholder: t.common.emailPlaceholder,
+      value: sessionEmail() ?? "",
+      "data-testid": "reply-own-email",
+    });
+    const offerSlot = messageSlot();
+    const create = button(
+      t.compose.replyCreate,
+      () => {
+        const own = ownEmail.value.trim();
+        if (!isEmail(own)) {
+          offerSlot.show(notice("error", t.inbox.emailMissing));
+          ownEmail.focus();
+          return;
+        }
+        return attach(() => createInbox(own));
+      },
+      { variant: "secondary", icon: "key", testId: "reply-create" },
+    );
+    return notice("info", h("div", null, t.compose.replyNoInbox, field(t.common.yourEmail, ownEmail), actions(create), offerSlot.el));
   }
 
   function renderReply(): void {
@@ -84,7 +86,6 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
             { variant: "text", testId: "reply-remove" },
           ),
         ),
-        field(t.common.yourEmail, replyEmail, t.compose.replyEmailHelp),
       );
     } else {
       replyPanel.replaceChildren(
@@ -112,8 +113,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     if (!replyInbox) {
       return undefined;
     }
-    const own = replyEmail.value.trim();
-    return { key: replyInbox.publicKey, email: isEmail(own) ? own : undefined };
+    return { key: replyInbox.publicKey, email: replyInbox.email ?? sessionEmail() };
   }
 
   async function update(): Promise<void> {

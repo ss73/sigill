@@ -6,7 +6,7 @@ import { h } from "../dom";
 import { t } from "../i18n";
 import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
-import { currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
+import { currentInbox, passkeyErrorMessage, sessionEmail, setReaderEmail, unlockInbox } from "../session";
 import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
 /** Distinguishes "not for this inbox" from passkey trouble and broken links. */
@@ -72,7 +72,7 @@ export function openView(envelope?: string): HTMLElement {
       const inbox = (useCurrent && currentInbox()) || (await unlockInbox());
       const { text, replyTo, to } = await openMessage(inbox, envelope!);
       if (to && !sessionEmail()) {
-        setSessionEmail(to); // lets a reply carry the reader's address back
+        setReaderEmail(to); // lets a reply carry the reader's address back
       }
       content.replaceChildren(
         title(t.open.messageTitle, replyTo?.email ? t.open.from(replyTo.email) : undefined),
