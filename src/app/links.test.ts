@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fromBase64Url, toBase64Url } from "../crypto";
-import { fragmentFromPaste, inboxLink, inviteLink, messageLink, parseRoute } from "./links";
+import { fragmentFromPaste, inboxLink, inviteLink, langHint, messageLink, parseRoute } from "./links";
 
 const BASE = "https://example.com/app/";
 const KEY = new Uint8Array(32).fill(7);
@@ -36,6 +36,15 @@ describe("links", () => {
     expect(parseRoute("#open")).toEqual({ name: "open" });
     expect(parseRoute("")).toEqual({ name: "home" });
     expect(parseRoute("#whatever")).toEqual({ name: "home" });
+  });
+
+  it("carries the e-mail language as a hint", () => {
+    const message = new URL(messageLink(BASE, "abc_-", "sv")).hash;
+    expect(message).toBe("#m=abc_-&l=sv");
+    expect(parseRoute(message)).toEqual({ name: "open", envelope: "abc_-" });
+    expect(langHint(message)).toBe("sv");
+    expect(langHint(new URL(inviteLink(BASE, { lang: "de" })).hash)).toBe("de");
+    expect(langHint("#m=abc")).toBeNull();
   });
 
   it("extracts fragments from pasted links", () => {

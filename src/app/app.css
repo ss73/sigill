@@ -242,7 +242,8 @@ h2 {
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--border);
@@ -253,7 +254,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: transparent;
@@ -453,4 +455,25 @@ textarea {
 .signature small {
   color: #6b7280;
   font-size: 0.7rem;
+}
+
+/* --- Language ---------------------------------------------------------------- */
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+.topbar select {
+  width: auto;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.topbar select:hover {
+  border-color: var(--border);
 }

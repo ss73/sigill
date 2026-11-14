@@ -1,5 +1,6 @@
-import { parseRoute } from "./links";
-import { notice } from "./ui";
+import { lang, preferredLang, setLang, storedLang, t, isLang } from "./i18n";
+import { langHint, parseRoute } from "./links";
+import { languageSelect, notice } from "./ui";
 import { brokenLinkView, composeView } from "./views/compose";
 import { homeView } from "./views/home";
 import { inboxView } from "./views/inbox";
@@ -35,17 +36,54 @@ async function browserSupported(): Promise<boolean> {
   }
 }
 
+function topBar(): HTMLElement {
+  const select = languageSelect(lang(), (code) => void switchLanguage(code), "ui-language");
+  select.setAttribute("aria-label", t.common.language);
+  const bar = document.createElement("div");
+  bar.className = "topbar";
+  bar.append(select);
+  return bar;
+}
+
 function render(): void {
-  app.replaceChildren(view());
+  app.replaceChildren(topBar(), view());
   window.scrollTo(0, 0);
   app.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
 }
 
+/** Re-renders in another language, keeping whatever the user has typed. */
+async function switchLanguage(code: Parameters<typeof setLang>[0]): Promise<void> {
+  const drafts = new Map<string, string>();
+  for (const el of app.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[data-testid]:not([readonly]), textarea[data-testid]")) {
+    if (el.value) {
+      drafts.set(el.dataset.testid!, el.value);
+    }
+  }
+  await setLang(code, true);
+  render();
+  for (const [id, value] of drafts) {
+    const el = app.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[data-testid="${id}"]`);
+    if (el && !el.value) {
+      el.value = value;
+      el.dispatchEvent(new Event("input"));
+    }
+  }
+  app.querySelector<HTMLElement>('[data-testid="ui-language"]')?.focus();
+}
+
+/** A link written in another language (l=) opens in that language, unless the user picked one. */
+async function onNavigate(): Promise<void> {
+  const hint = langHint(location.hash);
+  if (!storedLang() && isLang(hint) && hint !== lang()) {
+    await setLang(hint);
+  }
+  render();
+}
+
+await setLang(preferredLang(langHint(location.hash)));
 if (await browserSupported()) {
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", () => void onNavigate());
   render();
 } else {
-  app.replaceChildren(
-    notice("error", "This browser is too old for Sigill. Please update it, or use a current Safari, Chrome, Edge or Firefox."),
-  );
+  app.replaceChildren(notice("error", t.common.tooOld));
 }

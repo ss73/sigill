@@ -1,9 +1,10 @@
 /** "Send a secure message" without a recipient link yet: paste one, or ask for one. */
 
 import { h } from "../dom";
+import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, fragmentFromPaste, inviteLink, isEmail } from "../links";
-import { asText, inviteEmail, mailto } from "../mail";
-import { actions, backLink, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
+import { asText, inviteEmail, mailto, type Email } from "../mail";
+import { actions, backLink, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
 
 export function sendView(): HTMLElement {
   // --- Paste an existing secure link -----------------------------------------
@@ -21,55 +22,65 @@ export function sendView(): HTMLElement {
     if (hash?.startsWith("#to=")) {
       location.hash = hash;
     } else {
-      pasteSlot.show(value ? notice("error", "That doesn't look like a secure link. It should contain “#to=”.") : null);
+      pasteSlot.show(value ? notice("error", t.send.notALink) : null);
     }
   });
 
   // --- Ask for a link ----------------------------------------------------------
-  const theirEmail = h("input", { type: "email", autocomplete: "off", placeholder: "their@email.com", "data-testid": "ask-their-email" });
-  const yourEmail = h("input", { type: "email", autocomplete: "email", placeholder: "you@email.com", "data-testid": "ask-your-email" });
+  const theirEmail = h("input", { type: "email", autocomplete: "off", placeholder: t.send.theirEmailPlaceholder, "data-testid": "ask-their-email" });
+  const yourEmail = h("input", { type: "email", autocomplete: "email", placeholder: t.common.emailPlaceholder, "data-testid": "ask-your-email" });
   const askSlot = messageSlot();
-  const ask = linkButton("Ask by e-mail", "#", { icon: "mail", testId: "ask-send" });
-  let invitation = inviteEmail(inviteLink(appBase(), {}));
+  const ask = linkButton(t.send.ask, "#", { icon: "mail", testId: "ask-send" });
+  let emailLang: Lang = lang();
+  let invitation: Email | null = null;
+  let sequence = 0;
 
-  function updateAsk(): void {
+  async function updateAsk(): Promise<void> {
+    const mine = ++sequence;
     const them = theirEmail.value.trim();
     const me = yourEmail.value.trim();
-    invitation = inviteEmail(inviteLink(appBase(), { reply: isEmail(me) ? me : undefined, email: isEmail(them) ? them : undefined }));
+    const m = await messagesFor(emailLang);
+    if (mine !== sequence) {
+      return; // a newer change won
+    }
+    const link = inviteLink(appBase(), { reply: isEmail(me) ? me : undefined, email: isEmail(them) ? them : undefined, lang: emailLang });
+    invitation = inviteEmail(link, m);
     ask.href = mailto(isEmail(them) ? them : undefined, invitation);
   }
-  theirEmail.addEventListener("input", updateAsk);
-  yourEmail.addEventListener("input", updateAsk);
-  updateAsk();
+  theirEmail.addEventListener("input", () => void updateAsk());
+  yourEmail.addEventListener("input", () => void updateAsk());
+  const languageField = field(
+    t.common.emailLanguage,
+    languageSelect(emailLang, (code) => {
+      emailLang = code;
+      void updateAsk();
+    }, "ask-language"),
+  );
+  void updateAsk();
 
   ask.addEventListener("click", () => {
-    askSlot.show(
-      notice(
-        "success",
-        "Your e-mail program should open with the invitation ready to send. ",
-        "When they reply with their secure link, just click it to write your message.",
-      ),
-    );
+    askSlot.show(notice("success", t.send.asked));
   });
 
   return page(
     backLink(),
-    title("Send a secure message", "To write securely, you need the recipient's secure link."),
+    title(t.send.title, t.send.lead),
     h(
       "section",
       { class: "card" },
-      h("h2", null, "I have their secure link"),
-      field("Paste the link here", linkInput, "Or simply click the link in their e-mail."),
+      h("h2", null, t.send.haveLink),
+      field(t.send.pasteLabel, linkInput, t.send.pasteHelp),
       pasteSlot.el,
     ),
     h(
       "section",
       { class: "card" },
-      h("h2", null, "They don't have one yet"),
-      h("p", null, "Send them a short invitation. They create their inbox in half a minute and send their link back to you."),
-      field("Their e-mail address", theirEmail),
-      field("Your e-mail address", yourEmail, "So they can send their link straight back to you."),
-      actions(ask, copyButton("Copy invitation", () => asText(invitation))),
+      h("h2", null, t.send.noLinkYet),
+      h("p", null, t.send.noLinkText),
+      field(t.send.theirEmail, theirEmail),
+      field(t.common.yourEmail, yourEmail, t.send.yourEmailHelp),
+      languageField,
+      actions(ask, copyButton(t.send.copyInvitation, () => (invitation ? asText(invitation) : ""))),
       askSlot.el,
     ),
   );

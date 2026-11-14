@@ -6,6 +6,8 @@
  * and fall back to copy & paste for long messages.
  */
 
+import type { Messages } from "./i18n";
+
 export const MAILTO_LIMIT = 1800;
 
 export interface Email {
@@ -29,47 +31,22 @@ export function fitsMailto(url: string): boolean {
   return url.length <= MAILTO_LIMIT;
 }
 
-export function messageEmail(link: string): Email {
-  return {
-    subject: "A secure message for you",
-    body:
-      "Hi,\n\n" +
-      "I've sent you a secure message. Click the link to open it with your passkey:\n\n" +
-      `${link}\n\n` +
-      "Only you can read it: it is encrypted, and the key never leaves your password manager.",
-  };
+export function messageEmail(link: string, m: Messages): Email {
+  return { subject: m.mail.messageSubject, body: m.mail.messageBody(link) };
 }
 
-export function inviteEmail(link: string): Email {
-  return {
-    subject: "Can I send you something securely?",
-    body:
-      "Hi,\n\n" +
-      "I'd like to send you something confidential. Please create a free secure inbox. " +
-      "It takes half a minute, needs no account, and only you will be able to read what I send:\n\n" +
-      `${link}\n\n` +
-      "When you're done, send me your secure link.\n\n" +
-      "Thanks!",
-  };
+export function inviteEmail(link: string, m: Messages): Email {
+  return { subject: m.mail.inviteSubject, body: m.mail.inviteBody(link) };
 }
 
-export function inboxLinkEmail(link: string): Email {
-  return {
-    subject: "My secure link",
-    body:
-      "Hi,\n\n" +
-      "Here is my secure link. Use it to send me confidential messages that only I can read:\n\n" +
-      `${link}\n\n` +
-      "Thanks!",
-  };
+export function inboxLinkEmail(link: string, m: Messages): Email {
+  return { subject: m.mail.linkSubject, body: m.mail.linkBody(link) };
 }
 
 /** The whole e-mail as plain text, for copying into webmail. */
 export function asText(email: Email): string {
   return `${email.subject}\n\n${email.body}`;
 }
-
-export const SIGNATURE_TEXT = "Send me a secure message";
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -80,16 +57,16 @@ function escapeHtml(value: string): string {
  * programs drop SVG, data: images and stylesheets, so it uses a hosted PNG,
  * inline styles and a table for layout.
  */
-export function signature(link: string, imageUrl: string): { text: string; html: string } {
+export function signature(link: string, imageUrl: string, m: Messages): { text: string; html: string } {
   const href = escapeHtml(link);
   return {
-    text: `${SIGNATURE_TEXT}: ${link}`,
+    text: `${m.mail.signature}: ${link}`,
     html:
       `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr>` +
       `<td style="padding:0 8px 0 0;vertical-align:middle"><a href="${href}"><img src="${escapeHtml(imageUrl)}" width="32" height="32" alt="Sigill" style="display:block;border:0"></a></td>` +
       `<td style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.3">` +
-      `<a href="${href}" style="color:#b3172f;font-weight:bold;text-decoration:none">${SIGNATURE_TEXT}</a><br>` +
-      `<span style="color:#6b7280;font-size:11px">Encrypted end to end with Sigill</span></td>` +
+      `<a href="${href}" style="color:#b3172f;font-weight:bold;text-decoration:none">${escapeHtml(m.mail.signature)}</a><br>` +
+      `<span style="color:#6b7280;font-size:11px">${escapeHtml(m.mail.signatureTagline)}</span></td>` +
       `</tr></table>`,
   };
 }

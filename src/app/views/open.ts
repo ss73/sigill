@@ -3,27 +3,22 @@
 import { rpIdProblem } from "../../config";
 import { fromBase64Url, isWellFormed } from "../../crypto";
 import { h } from "../dom";
+import { t } from "../i18n";
 import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
 import { currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
 import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
 /** Distinguishes "not for this inbox" from passkey trouble and broken links. */
-function decryptErrorMessage(error: unknown): string {
+function decryptProblem(error: unknown): "wrong-inbox" | "damaged" | "passkey" {
   const message = error instanceof Error ? error.message : "";
   if (message.includes("wrong key")) {
-    return (
-      "This message wasn't sent to the inbox you unlocked. " +
-      "If you have more than one Sigill passkey, try again and choose another one."
-    );
+    return "wrong-inbox";
   }
   if (/truncated|base64url|version|damaged|format/i.test(message)) {
-    return (
-      "This message link is incomplete or damaged. E-mail programs sometimes break long links. " +
-      "Copy the complete link from the e-mail and paste it below, or ask the sender to send it again."
-    );
+    return "damaged";
   }
-  return passkeyErrorMessage(error);
+  return "passkey";
 }
 
 function wellFormed(envelope: string): boolean {
@@ -43,17 +38,17 @@ function pasteField(): HTMLElement {
     if (hash?.startsWith("#m=")) {
       location.hash = hash;
     } else {
-      slot.show(value ? notice("error", "That doesn't look like a message link. It should contain “#m=”.") : null);
+      slot.show(value ? notice("error", t.open.notALink) : null);
     }
   });
-  return h("div", null, field("Paste the message link", input), slot.el);
+  return h("div", null, field(t.open.pasteLabel, input), slot.el);
 }
 
 export function openView(envelope?: string): HTMLElement {
   if (!envelope) {
     return page(
       backLink(),
-      title("Open a secure message", "If clicking the link in the e-mail didn't work, copy the whole link and paste it here."),
+      title(t.open.pasteTitle, t.open.pasteLead),
       h("section", { class: "card" }, pasteField()),
     );
   }
@@ -61,12 +56,8 @@ export function openView(envelope?: string): HTMLElement {
   if (!wellFormed(envelope)) {
     return page(
       backLink(),
-      title("This message link is incomplete"),
-      notice(
-        "error",
-        "Part of the link seems to be missing. E-mail programs sometimes break long links. ",
-        "Copy the complete link from the e-mail and paste it below, or ask the sender to send it again.",
-      ),
+      title(t.open.incompleteTitle),
+      notice("error", t.open.incomplete),
       h("section", { class: "card" }, pasteField()),
     );
   }
@@ -84,60 +75,66 @@ export function openView(envelope?: string): HTMLElement {
         setSessionEmail(to); // lets a reply carry the reader's address back
       }
       content.replaceChildren(
-        title("Your secure message", replyTo?.email ? `From ${replyTo.email}` : undefined),
+        title(t.open.messageTitle, replyTo?.email ? t.open.from(replyTo.email) : undefined),
         h(
           "section",
           { class: "card" },
           h("div", { class: "message", "data-testid": "message-text" }, text),
           actions(
             replyTo
-              ? linkButton("Reply securely", inboxHash(replyTo.key, replyTo.email), { icon: "send", testId: "reply" })
+              ? linkButton(t.open.reply, inboxHash(replyTo.key, replyTo.email), { icon: "send", testId: "reply" })
               : null,
-            copyButton("Copy text", () => text),
+            copyButton(t.open.copyText, () => text),
           ),
           replyTo
             ? null
             : h(
                 "p",
                 { class: "help", "data-testid": "no-reply" },
-                "The sender didn't include a secure reply address. To answer securely, ask them for their secure link.",
+                t.open.noReply,
               ),
         ),
         h(
           "p",
           { class: "help" },
-          "This message stays encrypted in your e-mail. Open the link again whenever you want to read it. ",
-          h("a", { href: "#inbox" }, "Show my secure link"),
+          t.open.staysEncrypted,
+          h("a", { href: "#inbox" }, t.open.showMyLink),
         ),
       );
       content.querySelector("h1")?.focus();
     } catch (error) {
-      slot.show(notice("error", decryptErrorMessage(error)));
-      if (/incomplete or damaged/.test(decryptErrorMessage(error))) {
+      const problem = decryptProblem(error);
+      slot.show(
+        notice(
+          "error",
+          problem === "wrong-inbox" ? t.open.wrongInbox : problem === "damaged" ? t.open.damaged : passkeyErrorMessage(error),
+        ),
+      );
+      if (problem === "damaged") {
         slot.el.append(pasteField());
       }
     }
   }
 
-  const openButton = button("Open message", () => reveal(false), { icon: "key", testId: "open-message" });
+  const openButton = button(t.open.openButton, () => reveal(false), { icon: "key", testId: "open-message" });
   if (problem) {
     openButton.disabled = true;
     slot.show(notice("error", problem));
   }
 
   content.append(
-    title("You've received a secure message", "It can only be opened with the passkey of your secure inbox."),
+    title(t.open.receivedTitle, t.open.receivedLead),
     h(
       "section",
       { class: "card" },
-      h("p", null, "Click the button and confirm with Face ID, fingerprint or your device PIN."),
+      h("p", null, t.open.instructions),
       actions(openButton),
       slot.el,
     ),
     h(
       "p",
       { class: "help" },
-      "Don't have a secure inbox? Then this message wasn't meant for you, or the sender used the wrong link.",
+      t.open.notForYou,
     ),
   );
 

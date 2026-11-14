@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { en } from "./i18n/en";
 import { fitsMailto, mailto, messageEmail, signature } from "./mail";
 
 describe("mailto", () => {
@@ -13,8 +14,8 @@ describe("mailto", () => {
   });
 
   it("detects messages too long for mailto", () => {
-    const short = mailto("x@y.z", messageEmail("https://e.com/#m=" + "a".repeat(100)));
-    const long = mailto("x@y.z", messageEmail("https://e.com/#m=" + "a".repeat(3000)));
+    const short = mailto("x@y.z", messageEmail("https://e.com/#m=" + "a".repeat(100), en));
+    const long = mailto("x@y.z", messageEmail("https://e.com/#m=" + "a".repeat(3000), en));
     expect(fitsMailto(short)).toBe(true);
     expect(fitsMailto(long)).toBe(false);
   });
@@ -23,14 +24,14 @@ describe("mailto", () => {
 describe("signature", () => {
   it("links both the logo and the text to the inbox", () => {
     const link = "https://example.com/sigill/#to=abc&e=me%40example.com";
-    const { text, html } = signature(link, "https://example.com/sigill/sigill-mail.png");
+    const { text, html } = signature(link, "https://example.com/sigill/sigill-mail.png", en);
     expect(text).toBe(`Send me a secure message: ${link}`);
     expect(html.match(/href="https:\/\/example.com\/sigill\/#to=abc&#38;e=me%40example.com"/g)).toHaveLength(2);
     expect(html).toContain('src="https://example.com/sigill/sigill-mail.png"');
   });
 
   it("escapes attribute values", () => {
-    const { html } = signature('x"><script>', "img.png");
+    const { html } = signature('x"><script>', "img.png", en);
     expect(html).not.toContain("<script>");
   });
 });

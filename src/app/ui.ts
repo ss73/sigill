@@ -1,12 +1,13 @@
 /** Shared UI building blocks for the views. */
 
 import { h, icon, type IconName } from "./dom";
+import { LANGUAGES, isLang, t, type Lang } from "./i18n";
 
 export function page(...children: (Node | false | null | undefined)[]): HTMLElement {
   return h("div", { class: "page" }, ...children);
 }
 
-export function backLink(href = "#", label = "Back"): HTMLElement {
+export function backLink(href = "#", label = t.common.back): HTMLElement {
   return h("a", { class: "back", href }, icon("back"), label);
 }
 
@@ -84,10 +85,10 @@ export function copyButton(
             }),
           ]);
         }
-        span.textContent = "Copied";
+        span.textContent = t.common.copied;
         btn.replaceChild(icon("check"), btn.firstChild!);
       } catch {
-        span.textContent = "Copy failed: select and copy manually";
+        span.textContent = t.common.copyFailed;
       }
       setTimeout(() => {
         span.textContent = label;
@@ -122,7 +123,7 @@ export function messageSlot(): { el: HTMLElement; show: (node: HTMLElement | nul
 
 export function field(
   labelText: string,
-  input: HTMLInputElement | HTMLTextAreaElement,
+  input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
   help?: string,
 ): HTMLElement {
   const id = input.id || `f-${Math.random().toString(36).slice(2, 8)}`;
@@ -142,7 +143,22 @@ export function securityCode(code: string, explanation: string): HTMLElement {
   return h(
     "details",
     { class: "code" },
-    h("summary", null, "Security code ", h("code", { "data-testid": "security-code" }, code)),
+    h("summary", null, `${t.common.securityCode} `, h("code", { "data-testid": "security-code" }, code)),
     h("p", null, explanation),
   );
+}
+
+/** A language picker; each language is listed in its own name. */
+export function languageSelect(value: Lang, onChange: (lang: Lang) => void, testId?: string): HTMLSelectElement {
+  const select = h(
+    "select",
+    { "data-testid": testId },
+    ...LANGUAGES.map((l) => h("option", { value: l.code, lang: l.code, selected: l.code === value }, l.name)),
+  );
+  select.addEventListener("change", () => {
+    if (isLang(select.value)) {
+      onChange(select.value);
+    }
+  });
+  return select;
 }

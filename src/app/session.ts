@@ -6,6 +6,7 @@
 import { RP_ID } from "../config";
 import { keyPairFromSeed, seedFromPrf, type InboxKeyPair } from "../crypto";
 import { PasskeyError, createInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
+import { t } from "./i18n";
 
 let current: InboxKeyPair | null = null;
 let email: string | undefined;
@@ -49,17 +50,13 @@ export function passkeyErrorMessage(error: unknown): string {
   if (error instanceof PasskeyError) {
     switch (error.code) {
       case "cancelled":
-        return "The passkey request was cancelled. Nothing has changed, so you can simply try again.";
+        return t.passkey.cancelled;
       case "prf-unsupported":
-        return (
-          "Your browser or password manager can't hold a secure inbox yet. " +
-          "Try Safari, Chrome or Edge with your device's built-in passkeys, or a recent 1Password or Bitwarden. " +
-          error.message
-        );
+        return t.passkey.prfUnsupported;
       case "unavailable":
-        return "This browser doesn't support passkeys. Please use an up-to-date Safari, Chrome, Edge or Firefox.";
+        return t.passkey.unavailable;
       case "failed":
-        return `Something went wrong with the passkey: ${error.message}`;
+        return t.passkey.failed(error.message);
     }
   }
   return error instanceof Error ? error.message : String(error);

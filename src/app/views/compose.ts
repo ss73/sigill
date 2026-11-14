@@ -2,23 +2,23 @@
 
 import { fingerprint, type InboxKeyPair } from "../../crypto";
 import { h } from "../dom";
+import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, isEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
 import { createInbox, currentInbox, passkeyErrorMessage, sessionEmail, setSessionEmail, unlockInbox } from "../session";
 import { PasskeyError } from "../../passkey";
-import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
+import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElement {
-  const who = recipientEmail ?? "the owner of this link";
   const textarea = h("textarea", {
     rows: 8,
-    placeholder: "Write your message…",
+    placeholder: t.compose.placeholder,
     "data-testid": "message",
   });
-  const send = linkButton("Send by e-mail", "#", { icon: "mail", testId: "send-email" });
+  const send = linkButton(t.compose.sendEmail, "#", { icon: "mail", testId: "send-email" });
   send.setAttribute("aria-disabled", "true");
-  const status = h("p", { class: "help", "data-testid": "compose-status" }, "Your message is encrypted as you type.");
+  const status = h("p", { class: "help", "data-testid": "compose-status" }, t.compose.encryptsAsYouType);
   const slot = messageSlot();
   const codeSlot = h("div");
 
@@ -29,7 +29,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   const replyEmail = h("input", {
     type: "email",
     autocomplete: "email",
-    placeholder: "you@email.com",
+    placeholder: t.common.emailPlaceholder,
     value: sessionEmail() ?? "",
     "data-testid": "reply-email",
   });
@@ -56,8 +56,8 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
         cancelled
           ? notice(
               "info",
-              "No secure inbox yet? Create one now: it takes one passkey confirmation, and your message stays as it is. ",
-              button("Create my inbox", () => attach(() => createInbox(replyEmail.value.trim())), {
+              t.compose.replyNoInbox,
+              button(t.compose.replyCreate, () => attach(() => createInbox(replyEmail.value.trim())), {
                 variant: "text",
                 testId: "reply-create",
               }),
@@ -72,10 +72,10 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       replyPanel.replaceChildren(
         notice(
           "success",
-          h("strong", null, "Secure reply is on. "),
-          `${recipientEmail ?? "The recipient"} can answer with one click, and the reply is encrypted for your inbox. `,
+          h("strong", null, t.compose.replyOn),
+          t.compose.replyOnText(recipientEmail),
           button(
-            "Remove",
+            t.compose.replyRemove,
             () => {
               replyInbox = null;
               renderReply();
@@ -84,18 +84,18 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
             { variant: "text", testId: "reply-remove" },
           ),
         ),
-        field("Your e-mail address", replyEmail, "Optional. So the reply is addressed to you."),
+        field(t.common.yourEmail, replyEmail, t.compose.replyEmailHelp),
       );
     } else {
       replyPanel.replaceChildren(
         actions(
-          button("Let them reply securely", () => attach(unlockInbox), {
+          button(t.compose.replyAdd, () => attach(unlockInbox), {
             variant: "secondary",
             icon: "key",
             testId: "reply-add",
           }),
         ),
-        h("p", { class: "help" }, "Adds your secure inbox to the message, so their answer is encrypted too. You confirm with your passkey."),
+        h("p", { class: "help" }, t.compose.replyAddHelp),
         replySlot.el,
       );
     }
@@ -106,6 +106,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   let email: Email | null = null;
   let fits = true;
   let sequence = 0;
+  let emailLang: Lang = lang();
 
   function replyTo(): ReplyTo | undefined {
     if (!replyInbox) {
@@ -122,21 +123,24 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       email = null;
       send.href = "#";
       send.setAttribute("aria-disabled", "true");
-      status.textContent = "Your message is encrypted as you type.";
+      status.textContent = t.compose.encryptsAsYouType;
       return;
     }
-    const envelope = await sealMessage(to, { text, replyTo: replyTo(), to: recipientEmail });
+    const [envelope, m] = await Promise.all([
+      sealMessage(to, { text, replyTo: replyTo(), to: recipientEmail }),
+      messagesFor(emailLang),
+    ]);
     if (mine !== sequence) {
       return; // a newer change won
     }
-    email = messageEmail(messageLink(appBase(), envelope));
+    email = messageEmail(messageLink(appBase(), envelope, emailLang), m);
     const full = mailto(recipientEmail, email);
     fits = fitsMailto(full);
     send.href = fits ? full : mailto(recipientEmail, { subject: email.subject });
     send.removeAttribute("aria-disabled");
     status.textContent = fits
-      ? `Encrypted. Only ${who} can read it.`
-      : `Encrypted. Only ${who} can read it. It's long, so it will be copied for you to paste into the e-mail.`;
+      ? t.compose.encrypted(recipientEmail)
+      : `${t.compose.encrypted(recipientEmail)} ${t.compose.tooLongForMailto}`;
   }
   textarea.addEventListener("input", () => void update());
 
@@ -150,16 +154,8 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     void navigator.clipboard?.writeText(fits ? asText(email) : email.body).catch(() => {});
     slot.show(
       fits
-        ? notice(
-            "success",
-            "Your e-mail program should open with the message ready. Just press Send. ",
-            "Nothing opened? The message has been copied: paste it into a new e-mail",
-            recipientEmail ? ` to ${recipientEmail}.` : ".",
-          )
-        : notice(
-            "info",
-            "Your message was copied. Paste it into the e-mail that opens (⌘V or Ctrl+V) and press Send.",
-          ),
+        ? notice("success", t.compose.sent(recipientEmail))
+        : notice("info", t.compose.copiedForPaste),
     );
   });
 
@@ -167,22 +163,28 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     codeSlot.replaceChildren(
       securityCode(
         code,
-        `For extra certainty, ask ${who} by phone or in person whether their inbox shows the same code. ` +
-          "If it matches, nobody has swapped the link on the way.",
+        t.compose.codeHelp(recipientEmail),
       ),
     ),
   );
 
   return page(
     backLink(),
-    title(`Secure message to ${who}`, "Write your message below. It is encrypted on this device before it leaves it."),
+    title(t.compose.title(recipientEmail), t.compose.lead),
     h(
       "section",
       { class: "card" },
-      field("Message", textarea),
+      field(t.compose.messageLabel, textarea),
       replyPanel,
+      field(
+        t.common.emailLanguage,
+        languageSelect(emailLang, (code) => {
+          emailLang = code;
+          void update();
+        }, "email-language"),
+      ),
       status,
-      actions(send, copyButton("Copy instead", () => (email ? asText(email) : ""), { testId: "copy-message" })),
+      actions(send, copyButton(t.compose.copyInstead, () => (email ? asText(email) : ""), { testId: "copy-message" })),
       slot.el,
       codeSlot,
     ),
@@ -192,13 +194,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
 export function brokenLinkView(): HTMLElement {
   return page(
     backLink(),
-    title("This secure link is incomplete"),
-    notice(
-      "error",
-      "Part of the link seems to be missing. E-mail programs sometimes break long links. ",
-      "Ask the person to send their secure link again, or copy the whole link and paste it on the ",
-      h("a", { href: "#send" }, "Send page"),
-      ".",
-    ),
+    title(t.compose.brokenTitle),
+    notice("error", t.compose.brokenText, h("a", { href: "#send" }, t.compose.brokenSendPage), t.compose.brokenEnd),
   );
 }

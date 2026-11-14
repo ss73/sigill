@@ -3,10 +3,13 @@
  * to the server:
  *
  *   #to=<inbox public key>&e=<owner e-mail>   write to an inbox
- *   #m=<envelope>                             open a message
- *   #inbox&reply=<asker e-mail>&e=<e-mail>    create/show your inbox
+ *   #m=<envelope>&l=<lang>                    open a message
+ *   #inbox&reply=<asker e-mail>&e=<e-mail>&l=<lang>   create/show your inbox
  *   #send                                     find a recipient / ask for a link
  *   #open                                     paste a message link
+ *
+ * `l` is the language the e-mail carrying the link was written in, so the
+ * page opens in the same language (see i18n).
  */
 
 import { fromBase64Url, toBase64Url, KEY_LENGTH, type Bytes } from "../crypto";
@@ -78,12 +81,17 @@ export function inboxHash(publicKey: Uint8Array, ownerEmail?: string): string {
   return `#${fragment([["to", toBase64Url(publicKey)], ["e", ownerEmail]])}`;
 }
 
-export function messageLink(base: string, envelope: string): string {
-  return `${base}#m=${envelope}`;
+export function messageLink(base: string, envelope: string, lang?: string): string {
+  return `${base}#${fragment([["m", envelope], ["l", lang]])}`;
 }
 
-export function inviteLink(base: string, opts: { reply?: string; email?: string }): string {
-  return `${base}#${fragment([["inbox", ""], ["reply", opts.reply], ["e", opts.email]])}`;
+export function inviteLink(base: string, opts: { reply?: string; email?: string; lang?: string }): string {
+  return `${base}#${fragment([["inbox", ""], ["reply", opts.reply], ["e", opts.email], ["l", opts.lang]])}`;
+}
+
+/** The `l=` language hint of a link, if any. */
+export function langHint(hash: string): string | null {
+  return new URLSearchParams(hash.replace(/^#/, "")).get("l");
 }
 
 /**

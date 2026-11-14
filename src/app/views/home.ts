@@ -1,6 +1,7 @@
 import { h, icon } from "../dom";
 import { page } from "../ui";
 import sigillUrl from "../sigill.svg";
+import { t } from "../i18n";
 
 function choice(href: string, iconName: "send" | "inbox", heading: string, text: string, testId: string): HTMLElement {
   return h(
@@ -18,31 +19,31 @@ export function homeView(): HTMLElement {
       { class: "hero" },
       h("img", { class: "logo", src: sigillUrl, alt: "", width: 96, height: 96 }),
       h("h1", { tabIndex: -1 }, "Sigill"),
-      h("p", { class: "lead" }, "Private messages over ordinary e-mail. Only the person you write to can read them."),
+      h("p", { class: "lead" }, t.home.lead),
     ),
     h(
       "nav",
-      { class: "choices", "aria-label": "What do you want to do?" },
-      choice("#send", "send", "Send a secure message", "Write to someone confidentially", "choose-send"),
-      choice("#inbox", "inbox", "Receive secure messages", "Get your own secure link in 30 seconds", "choose-receive"),
+      { class: "choices", "aria-label": t.home.choicesLabel },
+      choice("#send", "send", t.home.sendTitle, t.home.sendText, "choose-send"),
+      choice("#inbox", "inbox", t.home.receiveTitle, t.home.receiveText, "choose-receive"),
     ),
     h(
       "section",
       { class: "how", "aria-labelledby": "how-title" },
-      h("h2", { id: "how-title" }, "How it works"),
+      h("h2", { id: "how-title" }, t.home.howTitle),
       h(
         "ol",
         { class: "steps" },
-        h("li", null, h("strong", null, "The recipient creates an inbox"), " with a passkey: Face ID, fingerprint or device PIN. No account, no password."),
-        h("li", null, h("strong", null, "They share their secure link"), " with anyone who should be able to write to them."),
-        h("li", null, h("strong", null, "Messages travel as links in normal e-mails."), " They are encrypted in your browser and only the recipient's passkey can open them."),
+        h("li", null, h("strong", null, t.home.step1Strong), t.home.step1),
+        h("li", null, h("strong", null, t.home.step2Strong), t.home.step2),
+        h("li", null, h("strong", null, t.home.step3Strong), t.home.step3),
       ),
     ),
     h(
       "p",
       { class: "fineprint" },
-      "Nothing is stored on any server. ",
-      h("a", { href: "#open" }, "Have a message link that won't open?"),
+      t.home.nothingStored,
+      h("a", { href: "#open" }, t.home.wontOpen),
     ),
   );
 }

@@ -50,6 +50,13 @@ dedicated custom domain at the site and update `VITE_RP_ID` (and drop
 - **First contact:** Home → *Send a secure message* → *Ask by e-mail*. The
   invitation leads the recipient through setup and ends with a one-click
   *Send my link to …*.
+- **Languages:** English, Danish, German, Spanish, French, Italian, Dutch,
+  Norwegian, Polish, Portuguese, Finnish and Swedish. The UI follows the
+  browser, can be switched at the top of every page (remembered in
+  localStorage), and each e-mail can be written in the recipient's language.
+  Links in those e-mails carry `l=<lang>`, so the page opens in the same
+  language. Texts live in `src/app/i18n/`; `en.ts` is the source and the
+  others are type-checked and tested against it.
 
 All data travels in the URL fragment (`#to=…`, `#m=…`), which browsers
 never send to the server.
