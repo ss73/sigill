@@ -65,7 +65,7 @@ export function parseRoute(hash: string): Route {
   return { name: "home" };
 }
 
-/** The app's own address, e.g. "https://ss73.github.io/send-me-safe/". */
+/** The app's own address, e.g. "https://ss73.github.io/sigill/". */
 export function appBase(): string {
   return new URL(import.meta.env.BASE_URL, location.origin).href;
 }

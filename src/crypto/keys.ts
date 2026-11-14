@@ -16,7 +16,7 @@ const X25519 = { name: "X25519" } as const;
 /** ASN.1 PKCS#8 header for an X25519 private key; the 32-byte key follows. */
 const PKCS8_X25519_PREFIX = fromHex("302e020100300506032b656e04220420");
 
-const INBOX_SEED_INFO = utf8Encode("sendmesafe v1 inbox key");
+const INBOX_SEED_INFO = utf8Encode("sigill v1 inbox key");
 
 export interface InboxKeyPair {
   /** Non-extractable; usable only for deriveBits. */

@@ -1,4 +1,4 @@
-# Send Me Safe
+# Sigill
 
 Encrypted messages over e-mail without S/MIME. Recipients hold an inbox key
 derived from a passkey (WebAuthn PRF extension); senders need nothing.
@@ -26,7 +26,7 @@ changing it later makes existing inboxes unreachable.
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: unit tests, e2e tests
 against the production build, then a deploy to GitHub Pages at
-https://ss73.github.io/send-me-safe/.
+https://ss73.github.io/sigill/.
 
 That address is for testing only: passkeys are bound to `ss73.github.io`,
 which every Pages project of the account shares. Before real use, point a

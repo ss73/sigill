@@ -33,7 +33,7 @@ export function setSessionEmail(value: string | undefined): void {
 }
 
 export async function createInbox(ownEmail: string): Promise<InboxKeyPair> {
-  const inbox = await toInbox(await createInboxPasskey(RP_ID, ownEmail || "Send Me Safe inbox"));
+  const inbox = await toInbox(await createInboxPasskey(RP_ID, ownEmail || "Sigill inbox"));
   if (ownEmail) {
     setSessionEmail(ownEmail);
   }

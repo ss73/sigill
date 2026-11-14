@@ -10,7 +10,7 @@
 import { utf8Encode, type Bytes } from "./crypto";
 
 /** Changing this changes every user's inbox key. Bump only with a migration plan. */
-const PRF_SALT = utf8Encode("sendmesafe v1 inbox prf");
+const PRF_SALT = utf8Encode("sigill v1 inbox prf");
 
 export type PasskeyErrorCode = "unavailable" | "cancelled" | "prf-unsupported" | "failed";
 
@@ -125,7 +125,7 @@ export async function createInboxPasskey(rpId: string, label: string): Promise<P
   try {
     const credential = (await navigator.credentials.create({
       publicKey: {
-        rp: { id: rpId, name: "Send Me Safe" },
+        rp: { id: rpId, name: "Sigill" },
         user: { id: randomBytes(16), name: label, displayName: label },
         challenge: randomBytes(32),
         pubKeyCredParams: [

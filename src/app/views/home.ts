@@ -1,5 +1,6 @@
 import { h, icon } from "../dom";
 import { page } from "../ui";
+import sigillUrl from "../sigill.svg";
 
 function choice(href: string, iconName: "send" | "inbox", heading: string, text: string, testId: string): HTMLElement {
   return h(
@@ -15,8 +16,8 @@ export function homeView(): HTMLElement {
     h(
       "header",
       { class: "hero" },
-      h("span", { class: "logo" }, icon("lock")),
-      h("h1", { tabIndex: -1 }, "Send Me Safe"),
+      h("img", { class: "logo", src: sigillUrl, alt: "", width: 96, height: 96 }),
+      h("h1", { tabIndex: -1 }, "Sigill"),
       h("p", { class: "lead" }, "Private messages over ordinary e-mail. Only the person you write to can read them."),
     ),
     h(

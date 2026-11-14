@@ -102,17 +102,11 @@ h2 {
 }
 
 .logo {
-  display: inline-flex;
-  padding: 0.9rem;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
-  margin-bottom: 0.75rem;
-}
-
-.logo .icon {
-  width: 2.25rem;
-  height: 2.25rem;
+  display: block;
+  width: 6rem;
+  height: 6rem;
+  margin: 0 auto 0.5rem;
+  filter: drop-shadow(0 3px 4px rgb(0 0 0 / 0.18));
 }
 
 .hero h1 {

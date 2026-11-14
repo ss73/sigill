@@ -11,7 +11,7 @@
  * AES key = HKDF-SHA256(
  *   ikm  = X25519(ephemeral, recipient),
  *   salt = ephemeral public key | recipient public key,
- *   info = "sendmesafe v1 message")
+ *   info = "sigill v1 message")
  *
  * The version byte and ephemeral key are authenticated as AES-GCM additional
  * data, and the recipient key is bound through the HKDF salt.
@@ -26,7 +26,7 @@ const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 const HEADER_LENGTH = 1 + KEY_LENGTH;
 const MIN_LENGTH = HEADER_LENGTH + IV_LENGTH + TAG_LENGTH;
-const MESSAGE_INFO = utf8Encode("sendmesafe v1 message");
+const MESSAGE_INFO = utf8Encode("sigill v1 message");
 
 async function messageKey(secret: Bytes, ephemeralPublic: Uint8Array, recipientPublic: Uint8Array): Promise<CryptoKey> {
   const ikm = await crypto.subtle.importKey("raw", secret, "HKDF", false, ["deriveKey"]);

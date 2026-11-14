@@ -131,7 +131,7 @@ async function useInbox(result: PrfResult, action: string): Promise<void> {
 
 onClick("create", async () => {
   clearError("inbox-error");
-  const label = $<HTMLInputElement>("label").value.trim() || "Send Me Safe inbox";
+  const label = $<HTMLInputElement>("label").value.trim() || "Sigill inbox";
   log(`Creating passkey "${label}" for ${RP_ID}…`);
   try {
     await useInbox(await createInboxPasskey(RP_ID, label), "Create");

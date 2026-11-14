@@ -14,7 +14,7 @@ function decryptErrorMessage(error: unknown): string {
   if (message.includes("wrong key")) {
     return (
       "This message wasn't sent to the inbox you unlocked. " +
-      "If you have more than one Send Me Safe passkey, try again and choose another one."
+      "If you have more than one Sigill passkey, try again and choose another one."
     );
   }
   if (/truncated|base64url|version|damaged|format/i.test(message)) {

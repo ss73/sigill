@@ -46,6 +46,6 @@ if (await browserSupported()) {
   render();
 } else {
   app.replaceChildren(
-    notice("error", "This browser is too old for Send Me Safe. Please update it, or use a current Safari, Chrome, Edge or Firefox."),
+    notice("error", "This browser is too old for Sigill. Please update it, or use a current Safari, Chrome, Edge or Firefox."),
   );
 }

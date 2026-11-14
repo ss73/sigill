@@ -32,7 +32,7 @@ jobs:
           # Passkeys are bound to this domain. Temporary test domain: switch to
           # the permanent custom domain before real users create inboxes.
           VITE_RP_ID: ss73.github.io
-          BASE_PATH: /send-me-safe/
+          BASE_PATH: /sigill/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
