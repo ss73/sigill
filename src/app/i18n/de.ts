@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Fügt Ihr sicheres Postfach zur Nachricht hinzu, damit auch die Antwort verschlüsselt ist. Sie bestätigen mit Ihrem Passkey.",
     replyNoInbox: "Noch kein sicheres Postfach? Erstellen Sie jetzt eins: Es braucht nur eine Bestätigung mit Ihrem Passkey, und Ihre Nachricht bleibt erhalten. ",
     replyCreate: "Mein Postfach erstellen",
+    replyHaveInbox: "Ich habe schon ein Postfach",
     brokenTitle: "Dieser sichere Link ist unvollständig",
     brokenText: "Ein Teil des Links scheint zu fehlen. E-Mail-Programme zerlegen manchmal lange Links. Bitten Sie die Person, ihren sicheren Link noch einmal zu senden, oder kopieren Sie den ganzen Link und fügen Sie ihn auf der ",
     brokenSendPage: "Senden-Seite",

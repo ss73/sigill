@@ -72,6 +72,7 @@ export const messages: Messages = {
     replyAddHelp: "Føjer din sikre indbakke til beskeden, så svaret også bliver krypteret. Du bekræfter med din adgangsnøgle.",
     replyNoInbox: "Har du ikke en sikker indbakke endnu? Opret en nu: det kræver kun én bekræftelse med adgangsnøgle, og din besked forbliver som den er. ",
     replyCreate: "Opret min indbakke",
+    replyHaveInbox: "Jeg har allerede en indbakke",
     brokenTitle: "Dette sikre link er ufuldstændigt",
     brokenText: "En del af linket ser ud til at mangle. Mailprogrammer deler nogle gange lange links op. Bed personen sende sit sikre link igen, eller kopiér hele linket og indsæt det på ",
     brokenSendPage: "Send-siden",

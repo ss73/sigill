@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Aggiunge la tua casella sicura al messaggio, così anche la risposta sarà crittografata. Confermi con la tua passkey.",
     replyNoInbox: "Non hai ancora una casella sicura? Creane una ora: basta una conferma con la passkey e il tuo messaggio resta com'è. ",
     replyCreate: "Crea la mia casella",
+    replyHaveInbox: "Ho già una casella",
     brokenTitle: "Questo link sicuro è incompleto",
     brokenText: "Sembra che manchi una parte del link. A volte i programmi di posta spezzano i link lunghi. Chiedi alla persona di rimandarti il suo link sicuro, oppure copia il link completo e incollalo nella ",
     brokenSendPage: "pagina Invia",

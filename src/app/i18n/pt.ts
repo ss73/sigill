@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Junta a sua caixa de entrada segura à mensagem, para que a resposta também seja encriptada. A confirmação é feita com a chave de acesso.",
     replyNoInbox: "Ainda não tem caixa de entrada segura? Crie uma agora: basta uma confirmação com a chave de acesso, e a mensagem fica como está. ",
     replyCreate: "Criar a minha caixa de entrada",
+    replyHaveInbox: "Já tenho uma caixa de entrada",
     brokenTitle: "Este link seguro está incompleto",
     brokenText: "Parece faltar parte do link. Os programas de e-mail por vezes cortam links longos. Peça à pessoa que volte a enviar o link seguro, ou copie o link completo e cole-o na ",
     brokenSendPage: "página Enviar",

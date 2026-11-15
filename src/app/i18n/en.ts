@@ -76,6 +76,7 @@ export const en = {
     replyAddHelp: "Adds your secure inbox to the message, so their answer is encrypted too. You confirm with your passkey.",
     replyNoInbox: "No secure inbox yet? Create one now: it takes one passkey confirmation, and your message stays as it is. ",
     replyCreate: "Create my inbox",
+    replyHaveInbox: "I already have an inbox",
     brokenTitle: "This secure link is incomplete",
     brokenText: "Part of the link seems to be missing. E-mail programs sometimes break long links. Ask the person to send their secure link again, or copy the whole link and paste it on the ",
     brokenSendPage: "Send page",

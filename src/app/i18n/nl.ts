@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Voegt je beveiligde inbox toe aan het bericht, zodat ook het antwoord versleuteld is. Je bevestigt met je toegangssleutel.",
     replyNoInbox: "Nog geen beveiligde inbox? Maak er nu een aan: het kost één bevestiging met je toegangssleutel, en je bericht blijft zoals het is. ",
     replyCreate: "Mijn inbox aanmaken",
+    replyHaveInbox: "Ik heb al een inbox",
     brokenTitle: "Deze beveiligde link is onvolledig",
     brokenText: "Er lijkt een deel van de link te ontbreken. E-mailprogramma's breken lange links soms af. Vraag de persoon de beveiligde link opnieuw te sturen, of kopieer de hele link en plak hem op de ",
     brokenSendPage: "verzendpagina",

@@ -181,6 +181,7 @@ test("secure reply can be added with the passkey, or left out", async ({ page })
   await page.goto(ownLink);
   await page.reload();
   await page.getByTestId("reply-add").click();
+  await page.getByTestId("reply-unlock").click();
   await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
   const withReply = await writeMessageHere(page, "reply wanted");
   await page.goto(firstLink(parseMailto(withReply).body));
@@ -195,6 +196,12 @@ test("secure reply can be added with the passkey, or left out", async ({ page })
   await expect(page.getByTestId("message-text")).toHaveText("no reply wanted");
   await expect(page.getByTestId("reply")).toHaveCount(0);
   await expect(page.getByTestId("no-reply")).toBeVisible();
+
+  // Turning it back on in a browser that knows the inbox needs no passkey.
+  await page.goto(ownLink);
+  await page.getByTestId("reply-remove").click();
+  await page.getByTestId("reply-add").click();
+  await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
 });
 
 test("secure reply offers to create an inbox when the sender has none", async ({ page }) => {
@@ -202,7 +209,10 @@ test("secure reply offers to create an inbox when the sender has none", async ({
   const stranger = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
   await page.goto(`/#to=${stranger}`);
   await page.getByTestId("message").fill("draft stays");
-  await page.getByTestId("reply-add").click(); // no passkey exists yet: the prompt fails
+  // No inbox in this browser: offered straight away, without a passkey prompt
+  // (which on a device without one would only offer a QR code).
+  await page.getByTestId("reply-add").click();
+  await expect(page.getByTestId("reply-own-email")).toBeVisible();
   await page.getByTestId("reply-create").click();
   await expect(page.getByRole("alert")).toContainText("enter your e-mail address");
   await page.getByTestId("reply-own-email").fill("erin@example.com");

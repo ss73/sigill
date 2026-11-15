@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Ajoute votre boîte de réception sécurisée au message, pour que la réponse soit chiffrée elle aussi. Vous confirmez avec votre clé d'accès.",
     replyNoInbox: "Pas encore de boîte de réception sécurisée ? Créez-en une maintenant : une seule confirmation avec votre clé d'accès suffit, et votre message reste tel quel. ",
     replyCreate: "Créer ma boîte de réception",
+    replyHaveInbox: "J'ai déjà une boîte de réception",
     brokenTitle: "Ce lien sécurisé est incomplet",
     brokenText: "Une partie du lien semble manquer. Les messageries coupent parfois les liens longs. Demandez à la personne de renvoyer son lien sécurisé, ou copiez le lien en entier et collez-le sur la ",
     brokenSendPage: "page Envoyer",

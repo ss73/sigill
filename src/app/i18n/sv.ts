@@ -72,6 +72,7 @@ export const messages: Messages = {
     replyAddHelp: "Lägger till din säkra inkorg i meddelandet, så att svaret också krypteras. Du bekräftar med din lösennyckel.",
     replyNoInbox: "Har du ingen säker inkorg än? Skapa en nu: det krävs bara en bekräftelse med lösennyckeln, och ditt meddelande ligger kvar. ",
     replyCreate: "Skapa min inkorg",
+    replyHaveInbox: "Jag har redan en inkorg",
     brokenTitle: "Den här säkra länken är ofullständig",
     brokenText: "En del av länken verkar saknas. Mejlprogram delar ibland upp långa länkar. Be personen skicka sin säkra länk igen, eller kopiera hela länken och klistra in den på ",
     brokenSendPage: "sidan Skicka",

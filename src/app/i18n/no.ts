@@ -72,6 +72,7 @@ export const messages: Messages = {
     replyAddHelp: "Legger den sikre innboksen din til i meldingen, så svaret også blir kryptert. Du bekrefter med passnøkkelen din.",
     replyNoInbox: "Har du ingen sikker innboks ennå? Opprett en nå: det krever bare én bekreftelse med passnøkkel, og meldingen din blir værende som den er. ",
     replyCreate: "Opprett innboksen min",
+    replyHaveInbox: "Jeg har allerede en innboks",
     brokenTitle: "Denne sikre lenken er ufullstendig",
     brokenText: "En del av lenken ser ut til å mangle. E-postprogrammer deler noen ganger opp lange lenker. Be personen sende den sikre lenken sin på nytt, eller kopier hele lenken og lim den inn på ",
     brokenSendPage: "Send-siden",

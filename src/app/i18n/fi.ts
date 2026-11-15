@@ -72,6 +72,7 @@ export const messages: Messages = {
     replyAddHelp: "Lisää suojatun postilaatikkosi viestiin, joten myös vastaus salataan. Vahvistat pääsyavaimellasi.",
     replyNoInbox: "Eikö sinulla ole vielä suojattua postilaatikkoa? Luo se nyt: se vaatii vain yhden vahvistuksen pääsyavaimella, eikä viestisi muutu. ",
     replyCreate: "Luo postilaatikkoni",
+    replyHaveInbox: "Minulla on jo postilaatikko",
     brokenTitle: "Tämä suojattu linkki on vajaa",
     brokenText: "Osa linkistä näyttää puuttuvan. Sähköpostiohjelmat katkaisevat joskus pitkiä linkkejä. Pyydä häntä lähettämään suojattu linkkinsä uudelleen, tai kopioi koko linkki ja liitä se ",
     brokenSendPage: "Lähetä-sivulle",

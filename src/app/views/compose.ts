@@ -66,7 +66,22 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       },
       { variant: "secondary", icon: "key", testId: "reply-create" },
     );
-    return notice("info", h("div", null, t.compose.replyNoInbox, field(t.common.yourEmail, ownEmail), actions(create), offerSlot.el));
+    const unlock = button(t.compose.replyHaveInbox, () => attach(unlockInbox), { variant: "text", testId: "reply-unlock" });
+    return notice("info", h("div", null, t.compose.replyNoInbox, field(t.common.yourEmail, ownEmail), actions(create, unlock), offerSlot.el));
+  }
+
+  /**
+   * Turning reply on. A browser that knows the inbox needs no passkey. One
+   * that doesn't offers to create an inbox first: asking for an existing
+   * passkey on a device without one makes the browser offer a QR code for
+   * another device, which looks like a dead end to someone who has none.
+   */
+  function addReply(): void {
+    if (knownInbox()) {
+      void attach(async () => {});
+    } else {
+      replySlot.show(createOffer());
+    }
   }
 
   function renderReply(): void {
@@ -90,7 +105,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     } else {
       replyPanel.replaceChildren(
         actions(
-          button(t.compose.replyAdd, () => attach(unlockInbox), {
+          button(t.compose.replyAdd, addReply, {
             variant: "secondary",
             icon: "key",
             testId: "reply-add",

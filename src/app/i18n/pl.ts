@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Dodaje twoją bezpieczną skrzynkę do wiadomości, więc odpowiedź też będzie zaszyfrowana. Potwierdzasz kluczem dostępu.",
     replyNoInbox: "Nie masz jeszcze bezpiecznej skrzynki? Utwórz ją teraz: wystarczy jedno potwierdzenie kluczem dostępu, a twoja wiadomość zostanie bez zmian. ",
     replyCreate: "Utwórz moją skrzynkę",
+    replyHaveInbox: "Mam już skrzynkę",
     brokenTitle: "Ten bezpieczny link jest niepełny",
     brokenText: "Wygląda na to, że brakuje części linku. Programy pocztowe czasem psują długie linki. Poproś tę osobę o ponowne wysłanie bezpiecznego linku albo skopiuj cały link i wklej go na ",
     brokenSendPage: "stronie wysyłania",

@@ -74,6 +74,7 @@ export const messages: Messages = {
     replyAddHelp: "Añade tu bandeja de entrada segura al mensaje para que su respuesta también vaya cifrada. Lo confirmas con tu llave de acceso.",
     replyNoInbox: "¿Aún no tienes bandeja de entrada segura? Crea una ahora: basta con confirmar con tu llave de acceso, y tu mensaje se queda como está. ",
     replyCreate: "Crear mi bandeja de entrada",
+    replyHaveInbox: "Ya tengo una bandeja de entrada",
     brokenTitle: "Este enlace seguro está incompleto",
     brokenText: "Parece que falta parte del enlace. A veces los programas de correo cortan los enlaces largos. Pide a esa persona que te vuelva a enviar su enlace seguro, o copia el enlace completo y pégalo en la ",
     brokenSendPage: "página Enviar",
