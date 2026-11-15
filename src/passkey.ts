@@ -89,23 +89,32 @@ async function discardCredential(rpId: string, credentialId: string): Promise<bo
   }
 }
 
-async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Promise<PrfResult> {
-  const credential = (await navigator.credentials.get({
-    publicKey: {
-      rpId,
-      // No server verifies this assertion; the challenge only has to be fresh.
-      challenge: randomBytes(32),
-      userVerification: "required",
-      allowCredentials: allowCredentialId ? [{ type: "public-key", id: allowCredentialId }] : [],
-      extensions: { prf: { eval: { first: PRF_SALT } } },
-    },
-  })) as PublicKeyCredential | null;
-  if (!credential) {
-    throw new PasskeyError("failed", "No passkey was returned.");
-  }
+/**
+ * A passkey autofill request that may be waiting on an e-mail field. Any
+ * other passkey request cancels it first: browsers allow one at a time.
+ */
+let suggestion: AbortController | null = null;
+
+function cancelSuggestion(): void {
+  suggestion?.abort();
+  suggestion = null;
+}
+
+function assertionOptions(allowCredentialId?: BufferSource): PublicKeyCredentialRequestOptions {
+  return {
+    rpId: "",
+    // No server verifies this assertion; the challenge only has to be fresh.
+    challenge: randomBytes(32),
+    userVerification: "required",
+    allowCredentials: allowCredentialId ? [{ type: "public-key", id: allowCredentialId }] : [],
+    extensions: { prf: { eval: { first: PRF_SALT } } },
+  };
+}
+
+function prfResult(credential: PublicKeyCredential, step: string): PrfResult | null {
   const first = credential.getClientExtensionResults().prf?.results?.first;
   if (!first) {
-    throw new PasskeyError("prf-unsupported", "This passkey or password manager does not support the PRF extension.");
+    return null;
   }
   const userHandle = (credential.response as AuthenticatorAssertionResponse).userHandle;
   return {
@@ -113,10 +122,25 @@ async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Prom
     credentialId: credential.id,
     userHandle: userHandle ? toBytes(userHandle) : null,
     details: {
-      step: "get",
+      step,
       authenticatorAttachment: credential.authenticatorAttachment ?? "unreported",
     },
   };
+}
+
+async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Promise<PrfResult> {
+  cancelSuggestion();
+  const credential = (await navigator.credentials.get({
+    publicKey: { ...assertionOptions(allowCredentialId), rpId },
+  })) as PublicKeyCredential | null;
+  if (!credential) {
+    throw new PasskeyError("failed", "No passkey was returned.");
+  }
+  const result = prfResult(credential, "get");
+  if (!result) {
+    throw new PasskeyError("prf-unsupported", "This passkey or password manager does not support the PRF extension.");
+  }
+  return result;
 }
 
 /**
@@ -126,6 +150,7 @@ async function evaluatePrf(rpId: string, allowCredentialId?: BufferSource): Prom
  */
 export async function createInboxPasskey(rpId: string, label: string, userId: Bytes = randomBytes(16)): Promise<PrfResult> {
   requireWebAuthn();
+  cancelSuggestion();
   try {
     const credential = (await navigator.credentials.create({
       publicKey: {
@@ -176,6 +201,50 @@ export async function unlockInboxPasskey(rpId: string): Promise<PrfResult> {
   requireWebAuthn();
   try {
     return await evaluatePrf(rpId);
+  } catch (error) {
+    throw wrapError(error);
+  }
+}
+
+/**
+ * Offers existing inbox passkeys in the autofill of an input marked
+ * autocomplete="… webauthn", without any dialog. Resolves when the user
+ * picks one, or with null if unavailable or cancelled by another request.
+ * It never fails on its own; only the follow-up after a pick can.
+ * Where autofill doesn't return the PRF value, the chosen passkey is asked
+ * once more in the usual way.
+ */
+export async function suggestInboxPasskey(rpId: string): Promise<PrfResult | null> {
+  if (!window.isSecureContext || typeof PublicKeyCredential?.isConditionalMediationAvailable !== "function") {
+    return null;
+  }
+  if (!(await PublicKeyCredential.isConditionalMediationAvailable())) {
+    return null;
+  }
+  cancelSuggestion();
+  const controller = new AbortController();
+  suggestion = controller;
+  let credential: PublicKeyCredential | null;
+  try {
+    credential = (await navigator.credentials.get({
+      mediation: "conditional",
+      signal: controller.signal,
+      publicKey: { ...assertionOptions(), rpId },
+    })) as PublicKeyCredential | null;
+  } catch {
+    // Cancelled by another request, or autofill isn't possible here (no
+    // passkey support, no matching passkeys): it's only a convenience.
+    return null;
+  } finally {
+    if (suggestion === controller) {
+      suggestion = null;
+    }
+  }
+  if (!credential) {
+    return null;
+  }
+  try {
+    return prfResult(credential, "autofill") ?? (await evaluatePrf(rpId, credential.rawId));
   } catch (error) {
     throw wrapError(error);
   }

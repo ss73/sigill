@@ -6,11 +6,12 @@
 
 import { fingerprint } from "../../crypto";
 import { rpIdProblem } from "../../config";
+import { PasskeyError } from "../../passkey";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang, type Messages } from "../i18n";
 import { appBase, cleanEmail, inboxLink } from "../links";
 import { inboxLinkEmail, mailto, signature } from "../mail";
-import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, unlockInbox, type KnownInbox } from "../session";
+import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 interface Opts {
@@ -30,7 +31,8 @@ export function inboxView(opts: Opts): HTMLElement {
 function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   const emailInput = h("input", {
     type: "email",
-    autocomplete: "email",
+    // Offers an existing inbox passkey right here, before a duplicate is made.
+    autocomplete: "email webauthn",
     required: true,
     placeholder: t.common.emailPlaceholder,
     value: opts.email ?? "",
@@ -39,14 +41,31 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   const slot = messageSlot();
   const problem = rpIdProblem();
 
+  function showReady(created: boolean): void {
+    root.replaceChildren(readyView(knownInbox()!, opts, created, root));
+    root.querySelector("h1")?.focus();
+  }
+
   async function run(action: () => Promise<unknown>, created: boolean): Promise<void> {
     slot.show(null);
     try {
       await action();
-      root.replaceChildren(readyView(knownInbox()!, opts, created, root));
-      root.querySelector("h1")?.focus();
+      showReady(created);
     } catch (error) {
       slot.show(notice("error", passkeyErrorMessage(error)));
+    }
+  }
+
+  /** Picked from the e-mail field's autofill: an inbox that already exists. */
+  async function offerExisting(): Promise<void> {
+    try {
+      if (await suggestedInbox()) {
+        showReady(false);
+      }
+    } catch (error) {
+      if (!(error instanceof PasskeyError && error.code === "cancelled")) {
+        slot.show(notice("error", passkeyErrorMessage(error)));
+      }
     }
   }
 
@@ -70,6 +89,8 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   if (problem) {
     create.disabled = unlock.disabled = true;
     slot.show(notice("error", problem));
+  } else {
+    queueMicrotask(() => void offerExisting());
   }
 
   return page(
@@ -79,7 +100,7 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
       "section",
       { class: "card" },
       field(t.common.yourEmail, emailInput, t.inbox.emailHelp),
-      actions(create),
+      actions(create, unlock),
       slot.el,
       h(
         "ul",
@@ -89,7 +110,6 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
         h("li", null, t.inbox.factRemembered),
         h("li", null, h("strong", null, t.inbox.fact3Strong), t.inbox.fact3),
       ),
-      actions(unlock),
     ),
   );
 }

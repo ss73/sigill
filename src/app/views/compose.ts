@@ -6,7 +6,7 @@ import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, cleanEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
-import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, unlockInbox, type KnownInbox } from "../session";
+import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
 import { PasskeyError } from "../../passkey";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
@@ -29,13 +29,18 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   const replyPanel = h("div", { class: "reply", "data-testid": "reply-panel" });
   const replySlot = messageSlot();
 
+  function replyOn(): void {
+    replySlot.show(null);
+    replyInbox = knownInbox();
+    renderReply();
+    void update();
+  }
+
   async function attach(action: () => Promise<unknown>): Promise<void> {
     replySlot.show(null);
     try {
       await action();
-      replyInbox = knownInbox();
-      renderReply();
-      void update();
+      replyOn();
     } catch (error) {
       const cancelled = error instanceof PasskeyError && error.code === "cancelled";
       replySlot.show(cancelled ? createOffer() : notice("error", passkeyErrorMessage(error)));
@@ -46,7 +51,8 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   function createOffer(): HTMLElement {
     const ownEmail = h("input", {
       type: "email",
-      autocomplete: "email",
+      // Offers an existing inbox passkey right here, before a duplicate is made.
+      autocomplete: "email webauthn",
       required: true,
       placeholder: t.common.emailPlaceholder,
       value: sessionEmail() ?? "",
@@ -67,6 +73,17 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
       { variant: "secondary", icon: "key", testId: "reply-create" },
     );
     const unlock = button(t.compose.replyHaveInbox, () => attach(unlockInbox), { variant: "text", testId: "reply-unlock" });
+    queueMicrotask(async () => {
+      try {
+        if (await suggestedInbox()) {
+          replyOn();
+        }
+      } catch (error) {
+        if (!(error instanceof PasskeyError && error.code === "cancelled")) {
+          offerSlot.show(notice("error", passkeyErrorMessage(error)));
+        }
+      }
+    });
     return notice("info", h("div", null, t.compose.replyNoInbox, field(t.common.yourEmail, ownEmail), actions(create, unlock), offerSlot.el));
   }
 

@@ -10,10 +10,11 @@
  */
 
 import { RP_ID } from "../config";
-import { fromBase64Url, keyPairFromSeed, seedFromPrf, toBase64Url, utf8Decode, utf8Encode, type Bytes, type InboxKeyPair } from "../crypto";
-import { PasskeyError, createInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
+import { fromBase64Url, keyPairFromSeed, seedFromPrf, toBase64Url, type Bytes, type InboxKeyPair } from "../crypto";
+import { PasskeyError, createInboxPasskey, suggestInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
 import { t } from "./i18n";
 import { cleanEmail } from "./links";
+import { emailFromUserId, userIdFor } from "./passkey-id";
 
 /** The public side of an inbox: what its secure link carries. */
 export interface KnownInbox {
@@ -22,12 +23,6 @@ export interface KnownInbox {
 }
 
 const STORAGE_KEY = "sigill.inbox";
-
-/**
- * The passkey's user ID carries the owner's e-mail, so unlocking on another
- * device brings the address back. WebAuthn allows at most 64 bytes.
- */
-const USER_ID_PREFIX = "sigill:";
 
 let current: InboxKeyPair | null = null;
 let known: KnownInbox | null = load();
@@ -53,23 +48,6 @@ function remember(inbox: KnownInbox): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ k: toBase64Url(inbox.publicKey), e: inbox.email }));
   } catch {
     // Private mode or storage disabled: remembered for this visit only.
-  }
-}
-
-function userIdFor(email: string): Bytes | undefined {
-  const id = utf8Encode(USER_ID_PREFIX + email);
-  return id.length <= 64 ? id : undefined;
-}
-
-function emailFromUserId(id: Bytes | null): string | undefined {
-  if (!id) {
-    return undefined;
-  }
-  try {
-    const text = utf8Decode(id);
-    return text.startsWith(USER_ID_PREFIX) ? cleanEmail(text.slice(USER_ID_PREFIX.length)) : undefined;
-  } catch {
-    return undefined; // a random ID from an older passkey
   }
 }
 
@@ -132,6 +110,16 @@ export async function createInbox(ownEmail: string): Promise<InboxKeyPair> {
 export async function unlockInbox(): Promise<InboxKeyPair> {
   const result = await unlockInboxPasskey(RP_ID);
   return toInbox(result, emailFromUserId(result.userHandle));
+}
+
+/**
+ * Waits for the user to pick an existing inbox passkey from the e-mail
+ * field's autofill. Null if the browser can't offer it, or if another
+ * passkey request (create, unlock) took over.
+ */
+export async function suggestedInbox(): Promise<InboxKeyPair | null> {
+  const result = await suggestInboxPasskey(RP_ID);
+  return result ? toInbox(result, emailFromUserId(result.userHandle)) : null;
 }
 
 /** Plain-language explanation of a passkey failure. */

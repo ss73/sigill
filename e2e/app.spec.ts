@@ -310,3 +310,30 @@ test("the theme can be picked and is remembered", async ({ page }) => {
   await expect(html).not.toHaveAttribute("data-theme", /.*/);
   expect(await background()).toBe(light);
 });
+
+test("an existing inbox is offered in the e-mail field's autofill, so no duplicate is made", async ({ page }) => {
+  await addAuthenticator(page, true, { autofill: true });
+  // Without autofill, set up the inbox and forget it, as on a new browser.
+  const inboxUrl = await createInbox(page, "gina@example.com");
+  await page.getByTestId("forget-inbox").click();
+
+  // The setup page now offers the passkey; picking it (done instantly by the
+  // test authenticator) shows the existing link instead of creating one.
+  await page.reload();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(inboxUrl);
+
+  // Same for "Let them reply securely" on someone else's link.
+  await page.getByTestId("forget-inbox").click();
+  const stranger = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("base64url");
+  await page.goto(`/#to=${stranger}`);
+  await page.getByTestId("reply-add").click();
+  await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
+});
+
+test("the setup page shows no error where passkey autofill isn't possible", async ({ page }) => {
+  // No authenticator at all: the autofill offer must fail silently.
+  await page.goto("/#inbox");
+  await expect(page.getByTestId("create-inbox")).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
