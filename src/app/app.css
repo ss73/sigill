@@ -45,6 +45,8 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
+  /* Long e-mail addresses in texts must wrap, not widen the page on phones. */
+  overflow-wrap: anywhere;
 }
 
 #app {
