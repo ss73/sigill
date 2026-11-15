@@ -8,7 +8,7 @@ import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
 import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, unlockInbox, type KnownInbox } from "../session";
 import { PasskeyError } from "../../passkey";
-import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
+import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElement {
   const textarea = h("textarea", {
@@ -184,7 +184,6 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   );
 
   return page(
-    backLink(),
     title(t.compose.title(recipientEmail), t.compose.lead),
     h(
       "section",
@@ -208,7 +207,6 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
 
 export function brokenLinkView(): HTMLElement {
   return page(
-    backLink(),
     title(t.compose.brokenTitle),
     notice("error", t.compose.brokenText, h("a", { href: "#send" }, t.compose.brokenSendPage), t.compose.brokenEnd),
   );

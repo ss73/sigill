@@ -10,6 +10,10 @@ export const messages: Messages = {
     emailPlaceholder: "dig@email.dk",
     language: "Sprog",
     emailLanguage: "Sprog i e-mailen",
+    theme: "Tema",
+    themeAuto: "Som enheden",
+    themeLight: "Lyst",
+    themeDark: "Mørkt",
     tooOld: "Denne browser er for gammel til Sigill. Opdater den, eller brug en nyere Safari, Chrome, Edge eller Firefox.",
   },
 

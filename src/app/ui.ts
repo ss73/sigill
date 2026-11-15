@@ -2,6 +2,7 @@
 
 import { h, icon, type IconName } from "./dom";
 import { LANGUAGES, isLang, t, type Lang } from "./i18n";
+import { THEMES, setTheme, theme, type Theme } from "./theme";
 
 export function page(...children: (Node | false | null | undefined)[]): HTMLElement {
   return h("div", { class: "page" }, ...children);
@@ -172,4 +173,26 @@ export function languageSelect(value: Lang, onChange: (lang: Lang) => void, test
     }
   });
   return select;
+}
+
+/** Match device / light / dark, as three small icon buttons. */
+export function themeSwitch(): HTMLElement {
+  const labels: Record<Theme, string> = { auto: t.common.themeAuto, light: t.common.themeLight, dark: t.common.themeDark };
+  const icons: Record<Theme, IconName> = { auto: "auto", light: "sun", dark: "moon" };
+  const group = h("div", { class: "theme-switch", role: "radiogroup", "aria-label": t.common.theme });
+  const buttons = THEMES.map((value) => {
+    const btn = h("button", { type: "button", role: "radio", title: labels[value], "aria-label": labels[value], "data-testid": `theme-${value}` }, icon(icons[value]));
+    btn.addEventListener("click", () => {
+      setTheme(value);
+      update();
+    });
+    return btn;
+  });
+  function update(): void {
+    const current = theme();
+    THEMES.forEach((value, i) => buttons[i]!.setAttribute("aria-checked", String(value === current)));
+  }
+  update();
+  group.append(...buttons);
+  return group;
 }

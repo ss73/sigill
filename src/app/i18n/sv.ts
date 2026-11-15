@@ -10,6 +10,10 @@ export const messages: Messages = {
     emailPlaceholder: "du@exempel.se",
     language: "Språk",
     emailLanguage: "Språk i mejlet",
+    theme: "Tema",
+    themeAuto: "Som enheten",
+    themeLight: "Ljust",
+    themeDark: "Mörkt",
     tooOld: "Den här webbläsaren är för gammal för Sigill. Uppdatera den, eller använd en aktuell Safari, Chrome, Edge eller Firefox.",
   },
 

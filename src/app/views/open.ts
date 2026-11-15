@@ -7,7 +7,7 @@ import { t } from "../i18n";
 import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
 import { currentInbox, passkeyErrorMessage, sessionEmail, setReaderEmail, unlockInbox } from "../session";
-import { actions, backLink, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
+import { actions, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
 /** Distinguishes "not for this inbox" from passkey trouble and broken links. */
 function decryptProblem(error: unknown): "wrong-inbox" | "damaged" | "passkey" {
@@ -47,7 +47,6 @@ function pasteField(): HTMLElement {
 export function openView(envelope?: string): HTMLElement {
   if (!envelope) {
     return page(
-      backLink(),
       title(t.open.pasteTitle, t.open.pasteLead),
       h("section", { class: "card" }, pasteField()),
     );
@@ -55,7 +54,6 @@ export function openView(envelope?: string): HTMLElement {
 
   if (!wellFormed(envelope)) {
     return page(
-      backLink(),
       title(t.open.incompleteTitle),
       notice("error", t.open.incomplete),
       h("section", { class: "card" }, pasteField()),
@@ -143,5 +141,5 @@ export function openView(envelope?: string): HTMLElement {
     void reveal(true);
   }
 
-  return page(backLink(), content);
+  return page(content);
 }

@@ -10,6 +10,10 @@ export const messages: Messages = {
     emailPlaceholder: "deg@epost.no",
     language: "Språk",
     emailLanguage: "Språk i e-posten",
+    theme: "Tema",
+    themeAuto: "Som enheten",
+    themeLight: "Lyst",
+    themeDark: "Mørkt",
     tooOld: "Denne nettleseren er for gammel for Sigill. Oppdater den, eller bruk en ny versjon av Safari, Chrome, Edge eller Firefox.",
   },
 

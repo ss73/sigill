@@ -10,6 +10,10 @@ export const messages: Messages = {
     emailPlaceholder: "tu@email.com",
     language: "Idioma",
     emailLanguage: "Idioma del correo",
+    theme: "Tema",
+    themeAuto: "Como el dispositivo",
+    themeLight: "Claro",
+    themeDark: "Oscuro",
     tooOld: "Este navegador es demasiado antiguo para Sigill. Actualízalo o usa una versión reciente de Safari, Chrome, Edge o Firefox.",
   },
 

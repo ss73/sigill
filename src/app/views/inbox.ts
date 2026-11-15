@@ -11,7 +11,7 @@ import { lang, messagesFor, t, type Lang, type Messages } from "../i18n";
 import { appBase, cleanEmail, inboxLink } from "../links";
 import { inboxLinkEmail, mailto, signature } from "../mail";
 import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, unlockInbox, type KnownInbox } from "../session";
-import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
+import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 interface Opts {
   /** Someone who asked for your link (from an invitation). */
@@ -73,7 +73,6 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   }
 
   return page(
-    backLink(),
     opts.reply ? notice("info", t.inbox.invited(opts.reply)) : null,
     title(t.inbox.setupTitle, t.inbox.setupLead),
     h(
@@ -161,7 +160,6 @@ function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLEl
   );
 
   return page(
-    backLink(),
     title(created ? t.inbox.readyTitle : t.inbox.linkTitle, t.inbox.readyLead),
     h(
       "section",

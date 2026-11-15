@@ -289,3 +289,24 @@ test("lookalike and hidden-character addresses in a link can't pass for real one
   await page.goto(`/#to=${key}&e=${encodeURIComponent("ceo@‮moc.elpmaxe")}`);
   await expect(heading).toHaveText("Secure message to the owner of this link");
 });
+
+test("the theme can be picked and is remembered", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+  const html = page.locator("html");
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const light = await background();
+
+  await page.getByTestId("theme-dark").click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByTestId("theme-dark")).toHaveAttribute("aria-checked", "true");
+  expect(await background()).not.toBe(light);
+
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+
+  // Back to following the device, which is light here.
+  await page.getByTestId("theme-auto").click();
+  await expect(html).not.toHaveAttribute("data-theme", /.*/);
+  expect(await background()).toBe(light);
+});

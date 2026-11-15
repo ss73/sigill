@@ -4,7 +4,7 @@ import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, cleanEmail, fragmentFromPaste, inviteLink } from "../links";
 import { asText, inviteEmail, mailto, type Email } from "../mail";
-import { actions, backLink, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
+import { actions, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
 
 export function sendView(): HTMLElement {
   // --- Paste an existing secure link -----------------------------------------
@@ -63,7 +63,6 @@ export function sendView(): HTMLElement {
   });
 
   return page(
-    backLink(),
     title(t.send.title, t.send.lead),
     h(
       "section",

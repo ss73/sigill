@@ -14,6 +14,10 @@ export const en = {
     emailPlaceholder: "you@email.com",
     language: "Language",
     emailLanguage: "Language of the e-mail",
+    theme: "Theme",
+    themeAuto: "Match device",
+    themeLight: "Light",
+    themeDark: "Dark",
     tooOld: "This browser is too old for Sigill. Please update it, or use a current Safari, Chrome, Edge or Firefox.",
   },
 

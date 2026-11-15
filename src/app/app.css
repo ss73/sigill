@@ -45,9 +45,14 @@
   line-height: 1.55;
 }
 
+/*
+ * Dark ("Ink": blue-black like fountain-pen ink, cream text) when the device
+ * is dark and the user hasn't picked light, or when the user picked dark.
+ * The same tokens appear twice because a media query can't be combined
+ * with a selector list.
+ */
 @media (prefers-color-scheme: dark) {
-  /* Ink: blue-black like fountain-pen ink, cream text. */
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #121b24;
     --surface: #18232e;
     --fg: #efe7d8;
@@ -68,6 +73,33 @@
     --error-soft: #3a2229;
     --shadow: rgb(0 0 0 / 0.6);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121b24;
+  --surface: #18232e;
+  --fg: #efe7d8;
+  --muted: #9fabb5;
+  --border: #2a3845;
+  --field-border: #36475a;
+  --accent: #e0566a;
+  --accent-hover: #ea7585;
+  --accent-soft: #2b2230;
+  --accent-fg: #fff8ee;
+  --primary: #b3223a;
+  --primary-hover: #c4304a;
+  --primary-fg: #fbf3ea;
+  --post: #7d9cc4;
+  --ok: #8fcaa2;
+  --ok-soft: #16302a;
+  --error: #ff8d8d;
+  --error-soft: #3a2229;
+  --shadow: rgb(0 0 0 / 0.6);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 * {
@@ -140,8 +172,7 @@ h2 {
 .label,
 .field label,
 .how h2,
-.code summary,
-.topbar select {
+.code summary {
   font-family: var(--mono);
   font-size: 0.7rem;
   font-weight: 500;
@@ -268,20 +299,6 @@ h2 {
 }
 
 /* --- Common ---------------------------------------------------------------- */
-
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--muted);
-  text-decoration: none;
-  font-family: var(--sans);
-  font-size: 0.9rem;
-}
-
-.back:hover {
-  color: var(--accent);
-}
 
 .card {
   position: relative;
@@ -555,21 +572,89 @@ input[readonly] {
   font-size: 0.7rem;
 }
 
-/* --- Language ---------------------------------------------------------------- */
+/* --- Top bar: back, theme, language ---------------------------------------- */
 
 .topbar {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.25rem;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.25rem;
+  margin-bottom: 1rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.topbar .tools {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.topbar .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font: inherit;
+  text-decoration: none;
+}
+
+.topbar .back:hover {
+  color: var(--accent);
 }
 
 .topbar select {
   width: auto;
-  padding: 0.3rem 0.5rem;
-  background: transparent;
+  padding: 0.35rem 0.5rem;
   border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
 }
 
 .topbar select:hover {
   border-color: var(--border);
+}
+
+.theme-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.theme-switch button {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.theme-switch button + button {
+  border-left: 1px solid var(--border);
+}
+
+.theme-switch button:hover {
+  color: var(--accent);
+}
+
+.theme-switch button[aria-checked="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.theme-switch .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.icon .solid {
+  fill: currentColor;
+  stroke: none;
 }

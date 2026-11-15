@@ -10,6 +10,10 @@ export const messages: Messages = {
     emailPlaceholder: "nimi@sahkoposti.fi",
     language: "Kieli",
     emailLanguage: "Sähköpostin kieli",
+    theme: "Teema",
+    themeAuto: "Laitteen mukaan",
+    themeLight: "Vaalea",
+    themeDark: "Tumma",
     tooOld: "Tämä selain on liian vanha Sigillin käyttöön. Päivitä se tai käytä uutta Safari-, Chrome-, Edge- tai Firefox-selainta.",
   },
 
