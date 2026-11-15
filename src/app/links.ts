@@ -24,13 +24,40 @@ export type Route =
 
 const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 
-export function isEmail(value: string): boolean {
-  return EMAIL.test(value);
+/** Invisible, control and direction-changing characters, and odd spaces. */
+const HIDDEN = /[\p{C}\p{Z}]/u;
+
+/** Domain labels: letters, digits and hyphens only (no "%41" escapes etc.). */
+const DOMAIN = /^[\p{L}\p{M}\p{N}-]+(\.[\p{L}\p{M}\p{N}-]+)+$/u;
+
+/**
+ * Checks an address and returns it in the form to show and use, or
+ * undefined. Addresses come from links and messages anyone can write, so
+ * anything that could make one look like another is refused or exposed:
+ * hidden characters are rejected, and a domain with non-Latin letters is
+ * shown as "xn--…" (as browsers do), so "exаmple.com" with a Cyrillic "а"
+ * can't pass for example.com.
+ */
+export function cleanEmail(value: string): string | undefined {
+  const text = value.trim();
+  if (!EMAIL.test(text) || HIDDEN.test(text)) {
+    return undefined;
+  }
+  const at = text.lastIndexOf("@");
+  if (!DOMAIN.test(text.slice(at + 1))) {
+    return undefined;
+  }
+  try {
+    const domain = new URL(`http://${text.slice(at + 1)}`).hostname;
+    return `${text.slice(0, at)}@${domain}`;
+  } catch {
+    return undefined;
+  }
 }
 
 function email(params: URLSearchParams, key: string): string | undefined {
-  const value = params.get(key)?.trim();
-  return value && isEmail(value) ? value : undefined;
+  const value = params.get(key);
+  return value ? cleanEmail(value) : undefined;
 }
 
 function fragment(entries: [string, string | undefined][]): string {

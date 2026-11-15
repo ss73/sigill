@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fromBase64Url, toBase64Url } from "../crypto";
-import { fragmentFromPaste, inboxLink, inviteLink, langHint, messageLink, parseRoute } from "./links";
+import { cleanEmail, fragmentFromPaste, inboxLink, inviteLink, langHint, messageLink, parseRoute } from "./links";
 
 const BASE = "https://example.com/app/";
 const KEY = new Uint8Array(32).fill(7);
@@ -53,5 +53,37 @@ describe("links", () => {
     expect(fragmentFromPaste("https://example.com/")).toBeNull();
     expect(fragmentFromPaste("https://example.com/#nothing")).toBeNull();
     expect(fromBase64Url(fragmentFromPaste(link)!.slice(4)).length).toBe(32);
+  });
+});
+
+describe("cleanEmail", () => {
+  it("accepts ordinary addresses, trimmed", () => {
+    expect(cleanEmail("  anna.berg+news@example.co.uk ")).toBe("anna.berg+news@example.co.uk");
+    expect(cleanEmail("Anna@Example.COM")).toBe("Anna@example.com");
+    expect(cleanEmail("åsa@example.se")).toBe("åsa@example.se");
+  });
+
+  it("rejects what isn't an address", () => {
+    for (const value of ["", "anna", "anna@example", "a b@example.com", "<a>@example.com", "a@exa mple.com", "a@ex%41mple.com"]) {
+      expect(cleanEmail(value), value).toBeUndefined();
+    }
+  });
+
+  it("rejects invisible and direction-changing characters", () => {
+    for (const value of [
+      "ceo\u200b@example.com", // zero-width space
+      "ceo@exam\u00adple.com", // soft hyphen
+      "ceo@\u202emoc.elpmaxe", // right-to-left override
+      "ceo\u2066@example.com", // bidi isolate
+      "ceo\u00a0x@example.com", // no-break space
+      "ceo\u0007@example.com", // control character
+    ]) {
+      expect(cleanEmail(value), JSON.stringify(value)).toBeUndefined();
+    }
+  });
+
+  it("exposes non-Latin domains, so lookalikes are visible", () => {
+    expect(cleanEmail("ceo@ex\u0430mple.com")).toBe("ceo@xn--exmple-4nf.com"); // Cyrillic а
+    expect(cleanEmail("info@räksmörgås.se")).toBe("info@xn--rksmrgs-5wao1o.se");
   });
 });

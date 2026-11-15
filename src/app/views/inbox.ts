@@ -8,7 +8,7 @@ import { fingerprint } from "../../crypto";
 import { rpIdProblem } from "../../config";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang, type Messages } from "../i18n";
-import { appBase, inboxLink, isEmail } from "../links";
+import { appBase, cleanEmail, inboxLink } from "../links";
 import { inboxLinkEmail, mailto, signature } from "../mail";
 import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, unlockInbox, type KnownInbox } from "../session";
 import { actions, backLink, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
@@ -53,8 +53,8 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   const create = button(
     t.inbox.create,
     () => {
-      const email = emailInput.value.trim();
-      if (!isEmail(email)) {
+      const email = cleanEmail(emailInput.value);
+      if (!email) {
         slot.show(notice("error", t.inbox.emailMissing));
         emailInput.focus();
         return;
@@ -118,8 +118,8 @@ function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLEl
   const sig = signatureCard(link, () => emailLang);
 
   function email(): string | undefined {
-    const value = inbox.email ?? emailInput?.value.trim();
-    return value && isEmail(value) ? value : undefined;
+    const value = inbox.email ?? emailInput?.value;
+    return value ? cleanEmail(value) : undefined;
   }
   function link(): string {
     return inboxLink(appBase(), inbox.publicKey, email());

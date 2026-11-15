@@ -9,7 +9,7 @@
  */
 
 import { KEY_LENGTH, concat, fromBase64Url, open, seal, toBase64Url, utf8Decode, utf8Encode, type Bytes, type InboxKeyPair } from "../crypto";
-import { isEmail } from "./links";
+import { cleanEmail } from "./links";
 
 const FORMAT_DEFLATE_JSON = 1;
 
@@ -90,7 +90,7 @@ export async function decodePayload(bytes: Bytes): Promise<Payload> {
 }
 
 function optionalEmail(value: unknown): string | undefined {
-  return typeof value === "string" && isEmail(value) ? value : undefined;
+  return typeof value === "string" ? cleanEmail(value) : undefined;
 }
 
 /** Optional fields are dropped rather than failing the whole message if malformed. */

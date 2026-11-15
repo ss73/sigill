@@ -13,7 +13,7 @@ import { RP_ID } from "../config";
 import { fromBase64Url, keyPairFromSeed, seedFromPrf, toBase64Url, utf8Decode, utf8Encode, type Bytes, type InboxKeyPair } from "../crypto";
 import { PasskeyError, createInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
 import { t } from "./i18n";
-import { isEmail } from "./links";
+import { cleanEmail } from "./links";
 
 /** The public side of an inbox: what its secure link carries. */
 export interface KnownInbox {
@@ -40,7 +40,7 @@ function load(): KnownInbox | null {
       return null;
     }
     const publicKey = fromBase64Url(stored.k);
-    const email = typeof stored.e === "string" && isEmail(stored.e) ? stored.e : undefined;
+    const email = typeof stored.e === "string" ? cleanEmail(stored.e) : undefined;
     return publicKey.length === 32 ? { publicKey, email } : null;
   } catch {
     return null;
@@ -67,8 +67,7 @@ function emailFromUserId(id: Bytes | null): string | undefined {
   }
   try {
     const text = utf8Decode(id);
-    const email = text.startsWith(USER_ID_PREFIX) ? text.slice(USER_ID_PREFIX.length) : "";
-    return isEmail(email) ? email : undefined;
+    return text.startsWith(USER_ID_PREFIX) ? cleanEmail(text.slice(USER_ID_PREFIX.length)) : undefined;
   } catch {
     return undefined; // a random ID from an older passkey
   }
@@ -96,8 +95,9 @@ export function knownInbox(): KnownInbox | null {
 }
 
 /** Adds the owner's e-mail to the remembered inbox (for older passkeys that lack it). */
-export function setInboxEmail(email: string): void {
-  if (known && isEmail(email)) {
+export function setInboxEmail(value: string): void {
+  const email = cleanEmail(value);
+  if (known && email) {
     remember({ ...known, email });
   }
 }

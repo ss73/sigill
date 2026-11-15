@@ -275,3 +275,17 @@ test("a revisit shows your link without a passkey; forgetting it asks again", as
   await page.getByTestId("unlock-inbox").click();
   await expect(page.getByTestId("inbox-link")).toHaveValue(inboxUrl);
 });
+
+test("lookalike and hidden-character addresses in a link can't pass for real ones", async ({ page }) => {
+  const key = Buffer.from(new Uint8Array(32).fill(9)).toString("base64url");
+  const heading = page.getByRole("heading", { level: 1 });
+
+  // Cyrillic "а" in the domain: shown the way the browser address bar would.
+  await page.goto(`/#to=${key}&e=${encodeURIComponent("ceo@exаmple.com")}`);
+  await expect(heading).toHaveText("Secure message to ceo@xn--exmple-4nf.com");
+
+  // A right-to-left override would make the address display reversed: dropped.
+  await page.goto("/");
+  await page.goto(`/#to=${key}&e=${encodeURIComponent("ceo@‮moc.elpmaxe")}`);
+  await expect(heading).toHaveText("Secure message to the owner of this link");
+});

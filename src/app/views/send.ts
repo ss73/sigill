@@ -2,7 +2,7 @@
 
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
-import { appBase, fragmentFromPaste, inviteLink, isEmail } from "../links";
+import { appBase, cleanEmail, fragmentFromPaste, inviteLink } from "../links";
 import { asText, inviteEmail, mailto, type Email } from "../mail";
 import { actions, backLink, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
 
@@ -37,15 +37,15 @@ export function sendView(): HTMLElement {
 
   async function updateAsk(): Promise<void> {
     const mine = ++sequence;
-    const them = theirEmail.value.trim();
-    const me = yourEmail.value.trim();
+    const them = cleanEmail(theirEmail.value);
+    const me = cleanEmail(yourEmail.value);
     const m = await messagesFor(emailLang);
     if (mine !== sequence) {
       return; // a newer change won
     }
-    const link = inviteLink(appBase(), { reply: isEmail(me) ? me : undefined, email: isEmail(them) ? them : undefined, lang: emailLang });
+    const link = inviteLink(appBase(), { reply: me, email: them, lang: emailLang });
     invitation = inviteEmail(link, m);
-    ask.href = mailto(isEmail(them) ? them : undefined, invitation);
+    ask.href = mailto(them, invitation);
   }
   theirEmail.addEventListener("input", () => void updateAsk());
   yourEmail.addEventListener("input", () => void updateAsk());

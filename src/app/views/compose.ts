@@ -3,7 +3,7 @@
 import { fingerprint } from "../../crypto";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
-import { appBase, isEmail, messageLink } from "../links";
+import { appBase, cleanEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
 import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, unlockInbox, type KnownInbox } from "../session";
@@ -56,8 +56,8 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     const create = button(
       t.compose.replyCreate,
       () => {
-        const own = ownEmail.value.trim();
-        if (!isEmail(own)) {
+        const own = cleanEmail(ownEmail.value);
+        if (!own) {
           offerSlot.show(notice("error", t.inbox.emailMissing));
           ownEmail.focus();
           return;
