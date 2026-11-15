@@ -11,11 +11,22 @@ export function backLink(href = "#", label = t.common.back): HTMLElement {
   return h("a", { class: "back", href }, icon("back"), label);
 }
 
+/**
+ * Text with line-break opportunities after "@" and "." in e-mail addresses,
+ * so a long address in a heading wraps at a sensible place rather than
+ * splitting "example.co" from "m".
+ */
+function breakableAddresses(text: string): (string | Node)[] {
+  return text.split(/(\S+@\S+)/).flatMap((part, i) =>
+    i % 2 === 0 ? [part] : part.split(/(?<=[@.])/).flatMap((piece, j) => (j === 0 ? [piece] : [h("wbr"), piece])),
+  );
+}
+
 export function title(text: string, lead?: string): HTMLElement {
   return h(
     "header",
     { class: "title" },
-    h("h1", { tabIndex: -1 }, text),
+    h("h1", { tabIndex: -1 }, ...breakableAddresses(text)),
     lead ? h("p", { class: "lead" }, lead) : null,
   );
 }
