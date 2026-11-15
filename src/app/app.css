@@ -24,6 +24,10 @@
   --accent-hover: #7d1523;
   --accent-soft: #f1e3dc;
   --accent-fg: #fbf8f1;
+  /* The main button stays solid wax red in both themes. */
+  --primary: var(--accent);
+  --primary-hover: var(--accent-hover);
+  --primary-fg: var(--accent-fg);
   --post: #2c4a73;
   --ok: #3f6b3a;
   --ok-soft: #e6ebda;
@@ -42,22 +46,26 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Ink: blue-black like fountain-pen ink, cream text. */
   :root {
-    --bg: #1a1714;
-    --surface: #221d19;
-    --fg: #eee6d8;
-    --muted: #a59888;
-    --border: #3a322b;
-    --field-border: #4a4037;
-    --accent: #e06a7b;
-    --accent-hover: #ec8b99;
-    --accent-soft: #3a2024;
-    --accent-fg: #1a1714;
-    --post: #7f9cc4;
-    --ok: #a9c79a;
-    --ok-soft: #232b1f;
-    --error: #f08a8a;
-    --error-soft: #3a2020;
+    --bg: #121b24;
+    --surface: #18232e;
+    --fg: #efe7d8;
+    --muted: #9fabb5;
+    --border: #2a3845;
+    --field-border: #36475a;
+    --accent: #e0566a;
+    --accent-hover: #ea7585;
+    --accent-soft: #2b2230;
+    --accent-fg: #fff8ee;
+    --primary: #b3223a;
+    --primary-hover: #c4304a;
+    --primary-fg: #fbf3ea;
+    --post: #7d9cc4;
+    --ok: #8fcaa2;
+    --ok-soft: #16302a;
+    --error: #ff8d8d;
+    --error-soft: #3a2229;
     --shadow: rgb(0 0 0 / 0.6);
   }
 }
@@ -371,14 +379,15 @@ input[readonly] {
 }
 
 .btn.primary {
-  background: var(--accent);
-  color: var(--accent-fg);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-fg);
   box-shadow: inset 0 -2px 0 rgb(0 0 0 / 0.2);
 }
 
 .btn.primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .btn.secondary {
