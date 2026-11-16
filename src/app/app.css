@@ -349,13 +349,8 @@ select {
   font-size: 1rem;
 }
 
-/*
- * One arrow for lists and for fields with suggested addresses, the same in
- * every browser and theme (the native ones differ, and a suggestion field's
- * only shows on hover in Chrome).
- */
-select,
-input[list] {
+/* One arrow for all lists, the same in every browser and theme. */
+select {
   appearance: none;
   padding-right: 2.2rem;
   background-image: var(--chevron);
@@ -364,8 +359,9 @@ input[list] {
   background-repeat: no-repeat;
 }
 
-input[list]::-webkit-calendar-picker-indicator {
-  display: none !important;
+/* "Another address…": typed right under the list. */
+.field select + input {
+  margin-top: 0.5rem;
 }
 
 /* Writing a letter: the message itself is in the reading face. */

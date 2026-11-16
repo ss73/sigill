@@ -47,6 +47,7 @@ export const messages: Messages = {
     theirEmail: "Vastaanottajan sähköpostiosoite",
     theirEmailPlaceholder: "vastaanottaja@sahkoposti.fi",
     yourEmailOptional: "Sähköpostiosoitteesi (valinnainen)",
+    otherAddress: "Muu osoite…",
     yourEmailHelp: "Jotta hän voi lähettää linkkinsä suoraan sinulle.",
     ask: "Pyydä sähköpostilla",
     copyInvitation: "Kopioi kutsu",

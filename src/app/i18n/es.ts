@@ -47,6 +47,7 @@ export const messages: Messages = {
     theirEmail: "Su correo electrónico",
     theirEmailPlaceholder: "nombre@email.com",
     yourEmailOptional: "Tu correo electrónico (opcional)",
+    otherAddress: "Otra dirección…",
     yourEmailHelp: "Para que pueda enviarte su enlace directamente.",
     ask: "Pedir por correo",
     copyInvitation: "Copiar invitación",

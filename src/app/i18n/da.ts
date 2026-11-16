@@ -47,6 +47,7 @@ export const messages: Messages = {
     theirEmail: "Modtagerens e-mailadresse",
     theirEmailPlaceholder: "modtager@email.dk",
     yourEmailOptional: "Din e-mailadresse (valgfri)",
+    otherAddress: "En anden adresse…",
     yourEmailHelp: "Så linket kan sendes direkte tilbage til dig.",
     ask: "Spørg via e-mail",
     copyInvitation: "Kopiér invitation",

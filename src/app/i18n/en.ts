@@ -51,6 +51,7 @@ export const en = {
     theirEmail: "Their e-mail address",
     theirEmailPlaceholder: "their@email.com",
     yourEmailOptional: "Your e-mail address (optional)",
+    otherAddress: "Another address…",
     yourEmailHelp: "So they can send their link straight back to you.",
     ask: "Ask by e-mail",
     copyInvitation: "Copy invitation",

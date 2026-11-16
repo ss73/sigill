@@ -380,7 +380,7 @@ test("several addresses: a reply comes from the address the message was sent to"
   void friendLink;
 });
 
-test("several addresses: an invitation is from the address in use, the others are suggested", async ({ page }) => {
+test("several addresses: an invitation is from the address in use, or another picked or typed", async ({ page }) => {
   await addAuthenticator(page);
   await createInbox(page, "me@home.example");
   await page.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
@@ -390,11 +390,22 @@ test("several addresses: an invitation is from the address in use, the others ar
 
   await page.goto("/");
   await page.getByTestId("choose-send").click();
-  await expect(page.getByTestId("ask-your-email")).toHaveValue("me@work.example");
-  await expect(page.locator("#own-addresses option")).toHaveCount(2);
+  const list = page.getByTestId("ask-your-address");
+  await expect(list).toHaveValue("me@work.example");
+  await expect(list.locator("option")).toHaveText(["me@work.example", "me@home.example", "Another address…"]);
+  await expect(page.getByTestId("ask-your-email")).toBeHidden();
   await page.getByTestId("ask-their-email").fill("boss@example.com");
-  const invite = parseMailto((await page.getByTestId("ask-send").getAttribute("href"))!);
-  expect(firstLink(invite.body)).toContain("reply=me%40work.example");
+  const invite = async () => firstLink(parseMailto((await page.getByTestId("ask-send").getAttribute("href"))!).body);
+  expect(await invite()).toContain("reply=me%40work.example");
+
+  await list.selectOption("me@home.example");
+  expect(await invite()).toContain("reply=me%40home.example");
+
+  // Any other address, typed.
+  await list.selectOption({ label: "Another address…" });
+  await expect(page.getByTestId("ask-your-email")).toBeFocused();
+  await page.getByTestId("ask-your-email").fill("me@elsewhere.example");
+  expect(await invite()).toContain("reply=me%40elsewhere.example");
 });
 
 test("asked for the link of an address with no inbox here: set that one up", async ({ page }) => {

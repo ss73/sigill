@@ -47,6 +47,7 @@ export const messages: Messages = {
     theirEmail: "Mottagarens mejladress",
     theirEmailPlaceholder: "mottagare@exempel.se",
     yourEmailOptional: "Din mejladress (valfritt)",
+    otherAddress: "En annan adress…",
     yourEmailHelp: "Så att länken kan skickas direkt tillbaka till dig.",
     ask: "Fråga via mejl",
     copyInvitation: "Kopiera inbjudan",

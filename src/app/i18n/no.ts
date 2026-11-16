@@ -47,6 +47,7 @@ export const messages: Messages = {
     theirEmail: "Mottakerens e-postadresse",
     theirEmailPlaceholder: "mottaker@epost.no",
     yourEmailOptional: "E-postadressen din (valgfritt)",
+    otherAddress: "En annen adresse…",
     yourEmailHelp: "Så lenken kan sendes rett tilbake til deg.",
     ask: "Spør på e-post",
     copyInvitation: "Kopier invitasjonen",
