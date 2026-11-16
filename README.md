@@ -26,12 +26,13 @@ changing it later makes existing inboxes unreachable.
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: unit tests, e2e tests
 against the production build, then a deploy to GitHub Pages at
-https://ss73.github.io/sigill/.
+https://sigill.x509.se/ (the repo's custom domain; DNS only, not proxied, so
+nothing between GitHub and the browser can alter the code).
 
-That address is for testing only: passkeys are bound to `ss73.github.io`,
-which every Pages project of the account shares. Before real use, point a
-dedicated custom domain at the site and update `VITE_RP_ID` (and drop
-`BASE_PATH`) in the workflow.
+Sigill needs a domain of its own: every site on a domain can use its
+passkeys and storage, and `*.github.io` is shared by all of an account's
+Pages projects. To host your own copy, give it a subdomain and set
+`VITE_RP_ID` to it.
 
 ## How it works for users
 

@@ -95,7 +95,7 @@ export function parseRoute(hash: string): Route {
   return { name: "home" };
 }
 
-/** The app's own address, e.g. "https://ss73.github.io/sigill/". */
+/** The app's own address, e.g. "https://sigill.x509.se/". */
 export function appBase(): string {
   return new URL(import.meta.env.BASE_URL, location.origin).href;
 }

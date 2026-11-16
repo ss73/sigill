@@ -29,10 +29,10 @@ jobs:
       - run: npm run test:e2e:prod
       - run: npm run build
         env:
-          # Passkeys are bound to this domain. Temporary test domain: switch to
-          # the permanent custom domain before real users create inboxes.
-          VITE_RP_ID: ss73.github.io
-          BASE_PATH: /sigill/
+          # Passkeys are bound to this domain: changing it makes existing
+          # inboxes unreachable. A subdomain of its own, so no other site can
+          # use Sigill's passkeys or storage.
+          VITE_RP_ID: sigill.x509.se
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
