@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Schicken Sie eine kurze Einladung. In einer halben Minute ist das Postfach erstellt, und Sie bekommen den Link zurück.",
     theirEmail: "E-Mail-Adresse des Empfängers",
     theirEmailPlaceholder: "empfaenger@beispiel.de",
+    yourEmailOptional: "Ihre E-Mail-Adresse (optional)",
     yourEmailHelp: "Damit der Link direkt an Sie zurückgeschickt werden kann.",
     ask: "Per E-Mail fragen",
     copyInvitation: "Einladung kopieren",

@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Envíale una breve invitación. Creará su bandeja de entrada en medio minuto y te devolverá su enlace.",
     theirEmail: "Su correo electrónico",
     theirEmailPlaceholder: "nombre@email.com",
+    yourEmailOptional: "Tu correo electrónico (opcional)",
     yourEmailHelp: "Para que pueda enviarte su enlace directamente.",
     ask: "Pedir por correo",
     copyInvitation: "Copiar invitación",

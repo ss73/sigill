@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Skicka en kort inbjudan. Mottagaren skapar sin inkorg på en halv minut och skickar tillbaka sin länk till dig.",
     theirEmail: "Mottagarens mejladress",
     theirEmailPlaceholder: "mottagare@exempel.se",
+    yourEmailOptional: "Din mejladress (valfritt)",
     yourEmailHelp: "Så att länken kan skickas direkt tillbaka till dig.",
     ask: "Fråga via mejl",
     copyInvitation: "Kopiera inbjudan",

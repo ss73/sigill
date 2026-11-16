@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Mandagli un breve invito. Creerà la sua casella in mezzo minuto e ti rimanderà il suo link.",
     theirEmail: "Il suo indirizzo e-mail",
     theirEmailPlaceholder: "nome@email.com",
+    yourEmailOptional: "Il tuo indirizzo e-mail (facoltativo)",
     yourEmailHelp: "Così può rimandarti subito il suo link.",
     ask: "Chiedi via e-mail",
     copyInvitation: "Copia invito",

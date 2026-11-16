@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Send en kort invitasjon. Mottakeren oppretter innboksen sin på et halvt minutt og sender lenken tilbake til deg.",
     theirEmail: "Mottakerens e-postadresse",
     theirEmailPlaceholder: "mottaker@epost.no",
+    yourEmailOptional: "E-postadressen din (valgfritt)",
     yourEmailHelp: "Så lenken kan sendes rett tilbake til deg.",
     ask: "Spør på e-post",
     copyInvitation: "Kopier invitasjonen",

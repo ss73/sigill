@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Stuur een korte uitnodiging. De ontvanger maakt in een halve minuut een inbox aan en stuurt je de link terug.",
     theirEmail: "E-mailadres van de ontvanger",
     theirEmailPlaceholder: "ontvanger@voorbeeld.nl",
+    yourEmailOptional: "Je e-mailadres (optioneel)",
     yourEmailHelp: "Zodat de link direct naar je teruggestuurd kan worden.",
     ask: "Vraag het per e-mail",
     copyInvitation: "Uitnodiging kopiëren",

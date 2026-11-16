@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Lähetä hänelle lyhyt kutsu. Hän luo postilaatikon puolessa minuutissa ja lähettää linkkinsä sinulle.",
     theirEmail: "Vastaanottajan sähköpostiosoite",
     theirEmailPlaceholder: "vastaanottaja@sahkoposti.fi",
+    yourEmailOptional: "Sähköpostiosoitteesi (valinnainen)",
     yourEmailHelp: "Jotta hän voi lähettää linkkinsä suoraan sinulle.",
     ask: "Pyydä sähköpostilla",
     copyInvitation: "Kopioi kutsu",

@@ -50,6 +50,7 @@ export const en = {
     noLinkText: "Send them a short invitation. They create their inbox in half a minute and send their link back to you.",
     theirEmail: "Their e-mail address",
     theirEmailPlaceholder: "their@email.com",
+    yourEmailOptional: "Your e-mail address (optional)",
     yourEmailHelp: "So they can send their link straight back to you.",
     ask: "Ask by e-mail",
     copyInvitation: "Copy invitation",

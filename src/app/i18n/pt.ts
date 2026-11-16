@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Envie-lhe um breve convite. A pessoa cria a caixa de entrada em meio minuto e devolve-lhe o link.",
     theirEmail: "E-mail da pessoa",
     theirEmailPlaceholder: "nome@email.com",
+    yourEmailOptional: "O seu endereço de e-mail (opcional)",
     yourEmailHelp: "Para que a pessoa possa responder diretamente com o link.",
     ask: "Pedir por e-mail",
     copyInvitation: "Copiar convite",

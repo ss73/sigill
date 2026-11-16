@@ -4,6 +4,7 @@ import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, cleanEmail, fragmentFromPaste, inviteLink } from "../links";
 import { asText, inviteEmail, mailto, type Email } from "../mail";
+import { emailOf, knownInbox, knownInboxes } from "../session";
 import { actions, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
 
 export function sendView(): HTMLElement {
@@ -28,7 +29,18 @@ export function sendView(): HTMLElement {
 
   // --- Ask for a link ----------------------------------------------------------
   const theirEmail = h("input", { type: "email", autocomplete: "off", placeholder: t.send.theirEmailPlaceholder, "data-testid": "ask-their-email" });
-  const yourEmail = h("input", { type: "email", autocomplete: "email", placeholder: t.common.emailPlaceholder, "data-testid": "ask-your-email" });
+  // The address in use, with the user's other addresses as suggestions.
+  const own = knownInbox();
+  const yourEmail = h("input", {
+    type: "email",
+    autocomplete: "email",
+    placeholder: t.common.emailPlaceholder,
+    value: (own && emailOf(own)) ?? "",
+    "data-testid": "ask-your-email",
+  });
+  const addresses = knownInboxes().map(emailOf).filter((email): email is string => Boolean(email));
+  const suggestions = h("datalist", { id: "own-addresses" }, ...addresses.map((email) => h("option", { value: email })));
+  yourEmail.setAttribute("list", suggestions.id);
   const askSlot = messageSlot();
   const ask = linkButton(t.send.ask, "#", { icon: "mail", testId: "ask-send" });
   let emailLang: Lang = lang();
@@ -77,7 +89,8 @@ export function sendView(): HTMLElement {
       h("h2", null, t.send.noLinkYet),
       h("p", null, t.send.noLinkText),
       field(t.send.theirEmail, theirEmail),
-      field(t.common.yourEmail, yourEmail, t.send.yourEmailHelp),
+      field(t.send.yourEmailOptional, yourEmail, t.send.yourEmailHelp),
+      suggestions,
       languageField,
       actions(ask, copyButton(t.send.copyInvitation, () => (invitation ? asText(invitation) : ""))),
       askSlot.el,

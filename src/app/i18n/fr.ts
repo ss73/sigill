@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Envoyez-lui une courte invitation. Elle crée sa boîte de réception en trente secondes et vous renvoie son lien.",
     theirEmail: "Son adresse e-mail",
     theirEmailPlaceholder: "nom@email.com",
+    yourEmailOptional: "Votre adresse e-mail (facultatif)",
     yourEmailHelp: "Pour que la personne puisse vous renvoyer son lien directement.",
     ask: "Demander par e-mail",
     copyInvitation: "Copier l'invitation",

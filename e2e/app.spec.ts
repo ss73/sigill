@@ -65,6 +65,9 @@ test("first contact: ask for a link, recipient sets up and sends it back in one 
   await page.goto("/");
   await page.getByTestId("choose-send").click();
   await page.getByTestId("ask-their-email").fill("bob@example.com");
+  // No inbox here, so nothing to fill in; it's optional.
+  await expect(page.getByTestId("ask-your-email")).toHaveValue("");
+  await expect(page.getByText("Your e-mail address (optional)")).toBeVisible();
   await page.getByTestId("ask-your-email").fill("alice@example.com");
   const invite = parseMailto((await page.getByTestId("ask-send").getAttribute("href"))!);
   expect(invite.to).toBe("bob@example.com");
@@ -375,6 +378,23 @@ test("several addresses: a reply comes from the address the message was sent to"
   await friend.getByTestId("reply").click();
   expect(parseMailto(await writeMessageHere(friend, "ok")).to).toBe("me@work.example");
   void friendLink;
+});
+
+test("several addresses: an invitation is from the address in use, the others are suggested", async ({ page }) => {
+  await addAuthenticator(page);
+  await createInbox(page, "me@home.example");
+  await page.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
+  await page.getByTestId("your-email").fill("me@work.example");
+  await page.getByTestId("create-inbox").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your inbox is ready");
+
+  await page.goto("/");
+  await page.getByTestId("choose-send").click();
+  await expect(page.getByTestId("ask-your-email")).toHaveValue("me@work.example");
+  await expect(page.locator("#own-addresses option")).toHaveCount(2);
+  await page.getByTestId("ask-their-email").fill("boss@example.com");
+  const invite = parseMailto((await page.getByTestId("ask-send").getAttribute("href"))!);
+  expect(firstLink(invite.body)).toContain("reply=me%40work.example");
 });
 
 test("asked for the link of an address with no inbox here: set that one up", async ({ page }) => {

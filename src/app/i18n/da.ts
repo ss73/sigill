@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Send en kort invitation. Modtageren opretter sin indbakke på et halvt minut og sender sit link tilbage til dig.",
     theirEmail: "Modtagerens e-mailadresse",
     theirEmailPlaceholder: "modtager@email.dk",
+    yourEmailOptional: "Din e-mailadresse (valgfri)",
     yourEmailHelp: "Så linket kan sendes direkte tilbage til dig.",
     ask: "Spørg via e-mail",
     copyInvitation: "Kopiér invitation",

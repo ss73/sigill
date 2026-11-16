@@ -46,6 +46,7 @@ export const messages: Messages = {
     noLinkText: "Wyślij krótkie zaproszenie. Odbiorca utworzy skrzynkę w pół minuty i odeśle ci swój link.",
     theirEmail: "Adres e-mail odbiorcy",
     theirEmailPlaceholder: "odbiorca@przyklad.pl",
+    yourEmailOptional: "Twój adres e-mail (opcjonalnie)",
     yourEmailHelp: "Żeby odbiorca mógł od razu odesłać ci swój link.",
     ask: "Poproś e-mailem",
     copyInvitation: "Kopiuj zaproszenie",
