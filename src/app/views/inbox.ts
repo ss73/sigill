@@ -1,7 +1,8 @@
 /**
  * Your inbox: create it, or see its secure link. Once created or unlocked,
  * this browser remembers the link (see session), so coming back shows it
- * straight away without a passkey prompt.
+ * straight away without a passkey prompt. Someone with several e-mail
+ * addresses has an inbox for each, and picks the one to share.
  */
 
 import { fingerprint } from "../../crypto";
@@ -11,7 +12,21 @@ import { h } from "../dom";
 import { lang, messagesFor, t, type Lang, type Messages } from "../i18n";
 import { appBase, cleanEmail, inboxLink } from "../links";
 import { inboxLinkEmail, mailto, signature } from "../mail";
-import { createInbox, forgetInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
+import {
+  createInbox,
+  emailOf,
+  forgetInbox,
+  inboxFor,
+  knownInbox,
+  knownInboxes,
+  passkeyErrorMessage,
+  sessionEmail,
+  setInboxEmail,
+  suggestedInbox,
+  unlockInbox,
+  useInbox,
+  type KnownInbox,
+} from "../session";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
 interface Opts {
@@ -23,9 +38,24 @@ interface Opts {
 
 export function inboxView(opts: Opts): HTMLElement {
   const root = h("div");
+  const invited = opts.email ? inboxFor(opts.email) : undefined;
+  if (invited) {
+    useInbox(invited.publicKey);
+  }
   const known = knownInbox();
-  root.append(known ? readyView(known, opts, false, root) : setupView({ ...opts, email: opts.email ?? sessionEmail() }, root));
+  // Asked for the link of an address that has no inbox here yet: set it up,
+  // with the others a click away.
+  root.append(
+    known && (invited || !opts.email)
+      ? readyView(known, opts, false, root)
+      : setupView({ ...opts, email: opts.email ?? sessionEmail() }, root),
+  );
   return root;
+}
+
+function show(root: HTMLElement, view: HTMLElement): void {
+  root.replaceChildren(view);
+  root.querySelector("h1")?.focus();
 }
 
 function setupView(opts: Opts, root: HTMLElement): HTMLElement {
@@ -40,10 +70,10 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
   });
   const slot = messageSlot();
   const problem = rpIdProblem();
+  const adding = knownInboxes().length > 0;
 
   function showReady(created: boolean): void {
-    root.replaceChildren(readyView(knownInbox()!, opts, created, root));
-    root.querySelector("h1")?.focus();
+    show(root, readyView(knownInbox()!, opts, created, root));
   }
 
   async function run(action: () => Promise<unknown>, created: boolean): Promise<void> {
@@ -78,6 +108,13 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
         emailInput.focus();
         return;
       }
+      const existing = inboxFor(email);
+      if (existing) {
+        // Already here: a second inbox for the same address would only confuse.
+        useInbox(existing.publicKey);
+        showReady(false);
+        return;
+      }
       return run(() => createInbox(email), true);
     },
     { icon: "key", testId: "create-inbox" },
@@ -95,7 +132,7 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
 
   return page(
     opts.reply ? notice("info", t.inbox.invited(opts.reply)) : null,
-    title(t.inbox.setupTitle, t.inbox.setupLead),
+    title(adding ? t.inbox.addTitle : t.inbox.setupTitle, t.inbox.setupLead),
     h(
       "section",
       { class: "card" },
@@ -111,6 +148,9 @@ function setupView(opts: Opts, root: HTMLElement): HTMLElement {
         h("li", null, h("strong", null, t.inbox.fact3Strong), t.inbox.fact3),
       ),
     ),
+    adding
+      ? actions(button(t.inbox.backToLink, () => showReady(false), { variant: "text", testId: "back-to-link" }))
+      : null,
   );
 }
 
@@ -127,6 +167,24 @@ function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLEl
         "data-testid": "link-email",
       });
   const linkInput = h("input", { type: "text", readOnly: true, "data-testid": "inbox-link" });
+  const others = knownInboxes();
+  const address = h(
+    "select",
+    { "data-testid": "inbox-address" },
+    ...others.map((other, i) =>
+      h("option", { value: String(i), selected: other === inbox }, emailOf(other) ?? t.inbox.unnamed),
+    ),
+    h("option", { value: "add" }, t.inbox.addAddress),
+  );
+  address.addEventListener("change", () => {
+    const picked = others[Number(address.value)];
+    if (picked) {
+      useInbox(picked.publicKey);
+      show(root, readyView(picked, opts, false, root));
+    } else {
+      show(root, setupView({ reply: opts.reply }, root));
+    }
+  });
   const share = linkButton(opts.reply ? t.inbox.sendLinkTo(opts.reply) : t.inbox.shareLink, "#", {
     icon: "mail",
     testId: "share-link",
@@ -172,9 +230,9 @@ function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLEl
   const forget = button(
     t.inbox.forget,
     () => {
-      forgetInbox();
-      root.replaceChildren(setupView({ email: inbox.email }, root));
-      root.querySelector("h1")?.focus();
+      forgetInbox(inbox.publicKey);
+      const next = knownInbox();
+      show(root, next ? readyView(next, opts, false, root) : setupView({ email: inbox.email }, root));
     },
     { variant: "text", testId: "forget-inbox" },
   );
@@ -184,6 +242,7 @@ function readyView(inbox: KnownInbox, opts: Opts, created: boolean, root: HTMLEl
     h(
       "section",
       { class: "card" },
+      inbox.email || others.length > 1 ? field(t.common.yourEmail, address) : null,
       emailInput ? field(t.common.yourEmail, emailInput, t.inbox.linkEmailHelp) : null,
       field(t.inbox.linkLabel, linkInput),
       field(

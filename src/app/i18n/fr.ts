@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Pour plus de certitude, demandez à ${email ?? "votre destinataire"} par téléphone ou de vive voix si sa boîte de réception affiche le même code. ` +
       "S'il correspond, personne n'a remplacé le lien en chemin.",
     replyOn: "Réponse sécurisée activée. ",
+    replyAddress: "Les réponses vont à",
     replyOnText: (email?: string) => `${email ?? "Votre destinataire"} peut répondre en un clic, et la réponse sera chiffrée pour votre boîte de réception. `,
     replyRemove: "Retirer",
     replyAdd: "Permettre une réponse sécurisée",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Elle est ajoutée à votre lien pour que les messages vous soient adressés automatiquement.",
     create: "Créer ma boîte de réception",
     emailMissing: "Saisissez d'abord votre adresse e-mail.",
+    addAddress: "Ajouter une autre adresse…",
+    addTitle: "Ajouter une autre adresse",
+    backToLink: "Retour à mon lien",
+    unnamed: "Boîte sans adresse",
     forget: "Oublier cette boîte de réception sur ce navigateur",
     unlock: "J'ai déjà une boîte de réception : afficher mon lien",
     fact1: "On vous demandera d'enregistrer une clé d'accès. Confirmez avec Face ID, votre empreinte digitale ou le code de votre appareil.",

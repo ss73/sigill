@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Para más seguridad, pregunta ${email ? `a ${email}` : "al destinatario"} por teléfono o en persona si su bandeja de entrada muestra el mismo código. ` +
       "Si coincide, nadie ha cambiado el enlace por el camino.",
     replyOn: "Respuesta segura activada. ",
+    replyAddress: "Las respuestas van a",
     replyOnText: (email?: string) => `${email ?? "El destinatario"} puede responder con un clic, y la respuesta irá cifrada a tu bandeja de entrada. `,
     replyRemove: "Quitar",
     replyAdd: "Permitir que responda de forma segura",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Se añade a tu enlace para que los mensajes vayan dirigidos a ti automáticamente.",
     create: "Crear mi bandeja de entrada",
     emailMissing: "Primero escribe tu dirección de correo.",
+    addAddress: "Añadir otra dirección…",
+    addTitle: "Añadir otra dirección",
+    backToLink: "Volver a mi enlace",
+    unnamed: "Bandeja sin dirección",
     forget: "Olvidar esta bandeja de entrada en este navegador",
     unlock: "Ya tengo una bandeja de entrada: mostrar mi enlace",
     fact1: "Se te pedirá que guardes una llave de acceso. Confírmalo con Face ID, tu huella digital o el PIN del dispositivo.",

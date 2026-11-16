@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Per maggiore sicurezza, chiedi ${email ? `a ${email}` : "al destinatario"} per telefono o di persona se nella sua casella compare lo stesso codice. ` +
       "Se corrisponde, nessuno ha sostituito il link lungo la strada.",
     replyOn: "Risposta sicura attiva. ",
+    replyAddress: "Le risposte vanno a",
     replyOnText: (email?: string) => `${email ?? "Il destinatario"} può rispondere con un clic e la risposta arriverà crittografata nella tua casella. `,
     replyRemove: "Rimuovi",
     replyAdd: "Consenti una risposta sicura",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Viene aggiunto al tuo link, così i messaggi ti vengono indirizzati automaticamente.",
     create: "Crea la mia casella",
     emailMissing: "Inserisci prima il tuo indirizzo email.",
+    addAddress: "Aggiungi un altro indirizzo…",
+    addTitle: "Aggiungi un altro indirizzo",
+    backToLink: "Torna al mio link",
+    unnamed: "Casella senza indirizzo",
     forget: "Dimentica questa casella su questo browser",
     unlock: "Ho già una casella: mostra il mio link",
     fact1: "Ti verrà chiesto di salvare una passkey. Conferma con Face ID, impronta digitale o il PIN del dispositivo.",

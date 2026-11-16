@@ -6,7 +6,19 @@ import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, cleanEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
-import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
+import {
+  createInbox,
+  emailOf,
+  knownInbox,
+  knownInboxes,
+  passkeyErrorMessage,
+  sessionEmail,
+  setInboxEmail,
+  suggestedInbox,
+  unlockInbox,
+  useInbox,
+  type KnownInbox,
+} from "../session";
 import { PasskeyError } from "../../passkey";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
@@ -24,7 +36,9 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
 
   // --- Secure reply ------------------------------------------------------------
   // On by default whenever this browser knows the user's inbox: a reply
-  // address is just the public link, so no passkey prompt is needed.
+  // address is just the public link, so no passkey prompt is needed. With
+  // several, it starts with the one in use (after opening a message: the one
+  // it was sent to).
   let replyInbox: KnownInbox | null = knownInbox();
   const replyPanel = h("div", { class: "reply", "data-testid": "reply-panel" });
   const replySlot = messageSlot();
@@ -114,9 +128,32 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     });
     input.addEventListener("input", () => {
       setInboxEmail(input.value);
+      replyInbox = knownInbox();
       void update();
     });
     return field(t.common.yourEmail, input, t.inbox.linkEmailHelp);
+  }
+
+  /** Which of the user's addresses replies go to. */
+  function replyAddressField(current: KnownInbox): HTMLElement {
+    const inboxes = knownInboxes();
+    const select = h(
+      "select",
+      { "data-testid": "reply-address" },
+      ...inboxes.map((inbox, i) =>
+        h("option", { value: String(i), selected: inbox === current }, emailOf(inbox) ?? t.inbox.unnamed),
+      ),
+    );
+    select.addEventListener("change", () => {
+      const picked = inboxes[Number(select.value)];
+      if (picked) {
+        useInbox(picked.publicKey);
+        replyInbox = picked;
+        renderReply();
+        void update();
+      }
+    });
+    return field(t.compose.replyAddress, select);
   }
 
   function renderReply(): void {
@@ -126,7 +163,8 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
           "success",
           h("strong", null, t.compose.replyOn),
           t.compose.replyOnText(recipientEmail),
-          (replyInbox.email ?? sessionEmail()) ? null : replyEmailField(),
+          knownInboxes().length > 1 ? replyAddressField(replyInbox) : null,
+          emailOf(replyInbox) ? null : replyEmailField(),
           button(
             t.compose.replyRemove,
             () => {
@@ -164,7 +202,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     if (!replyInbox) {
       return undefined;
     }
-    return { key: replyInbox.publicKey, email: replyInbox.email ?? sessionEmail() };
+    return { key: replyInbox.publicKey, email: emailOf(replyInbox) };
   }
 
   async function update(): Promise<void> {

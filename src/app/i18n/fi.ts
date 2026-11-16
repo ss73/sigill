@@ -70,6 +70,7 @@ export const messages: Messages = {
       `Jos haluat olla aivan varma, kysy vastaanottajalta${email ? ` (${email})` : ""} puhelimessa tai kasvotusten, näkyykö hänen postilaatikossaan sama koodi. ` +
       "Jos koodi täsmää, kukaan ei ole vaihtanut linkkiä matkalla.",
     replyOn: "Suojattu vastaus on käytössä. ",
+    replyAddress: "Vastaukset menevät osoitteeseen",
     replyOnText: (email?: string) => `${email ?? "Vastaanottaja"} voi vastata yhdellä napsautuksella, ja vastaus salataan postilaatikkoosi. `,
     replyRemove: "Poista",
     replyAdd: "Anna hänen vastata suojatusti",
@@ -90,6 +91,10 @@ export const messages: Messages = {
     emailHelp: "Se lisätään linkkiisi, jotta viestit osoitetaan sinulle automaattisesti.",
     create: "Luo postilaatikkoni",
     emailMissing: "Anna ensin sähköpostiosoitteesi.",
+    addAddress: "Lisää toinen osoite…",
+    addTitle: "Lisää toinen osoite",
+    backToLink: "Takaisin linkkiini",
+    unnamed: "Postilaatikko ilman osoitetta",
     forget: "Unohda postilaatikko tässä selaimessa",
     unlock: "Minulla on jo postilaatikko: näytä linkkini",
     fact1: "Sinua pyydetään tallentamaan pääsyavain. Vahvista Face ID:llä, sormenjäljellä tai laitteen PIN-koodilla.",

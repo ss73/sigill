@@ -1,12 +1,16 @@
 /**
- * The user's inbox. Two parts with different lifetimes:
+ * The user's inboxes: one per e-mail address they use. Two parts with
+ * different lifetimes:
  *
- * - The unlocked key pair, held in memory for this page visit only. A
- *   reload forgets it, and the passkey brings it back.
- * - The public side (inbox key and e-mail), which is what the secure link
- *   contains and is safe to share. This browser remembers it, so the link
- *   and secure reply work without a passkey prompt. Forgetting it only
- *   affects this browser.
+ * - Unlocked key pairs, held in memory for this page visit only. A reload
+ *   forgets them, and the passkey brings them back.
+ * - The public side (inbox key and e-mail), which is what a secure link
+ *   contains and is safe to share. This browser remembers it, so links and
+ *   secure reply work without a passkey prompt. Forgetting it only affects
+ *   this browser.
+ *
+ * The first remembered inbox is the one in use: the last one created,
+ * unlocked or picked.
  */
 
 import { RP_ID } from "../config";
@@ -22,33 +26,64 @@ export interface KnownInbox {
   email?: string;
 }
 
-const STORAGE_KEY = "sigill.inbox";
+const STORAGE_KEY = "sigill.inboxes";
+/** Before several inboxes: a single one. Read once, then replaced. */
+const OLD_STORAGE_KEY = "sigill.inbox";
 
-let current: InboxKeyPair | null = null;
-let known: KnownInbox | null = load();
-let readerEmail: string | undefined;
+let unlocked: InboxKeyPair[] = [];
+let known: KnownInbox[] = load();
+save(); // moves an inbox stored the old way
+/** The address a message was sent to, for an inbox that doesn't know its own. */
+let reader: { key: string; email: string } | null = null;
 
-function load(): KnownInbox | null {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as { k?: unknown; e?: unknown } | null;
-    if (typeof stored?.k !== "string") {
-      return null;
-    }
-    const publicKey = fromBase64Url(stored.k);
-    const email = typeof stored.e === "string" ? cleanEmail(stored.e) : undefined;
-    return publicKey.length === 32 ? { publicKey, email } : null;
-  } catch {
+function keyId(publicKey: Bytes): string {
+  return toBase64Url(publicKey);
+}
+
+function parse(value: unknown): KnownInbox | null {
+  const stored = value as { k?: unknown; e?: unknown } | null;
+  if (typeof stored?.k !== "string") {
     return null;
+  }
+  const publicKey = fromBase64Url(stored.k);
+  const email = typeof stored.e === "string" ? cleanEmail(stored.e) : undefined;
+  return publicKey.length === 32 ? { publicKey, email } : null;
+}
+
+function load(): KnownInbox[] {
+  try {
+    const list: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
+    if (Array.isArray(list)) {
+      return list.map(parse).filter((inbox): inbox is KnownInbox => inbox !== null);
+    }
+    const old = parse(JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) ?? "null"));
+    return old ? [old] : [];
+  } catch {
+    return [];
   }
 }
 
-function remember(inbox: KnownInbox): void {
-  known = inbox;
+function save(): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ k: toBase64Url(inbox.publicKey), e: inbox.email }));
+    if (known.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(known.map((inbox) => ({ k: keyId(inbox.publicKey), e: inbox.email }))));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    localStorage.removeItem(OLD_STORAGE_KEY);
   } catch {
     // Private mode or storage disabled: remembered for this visit only.
   }
+}
+
+function find(publicKey: Bytes): KnownInbox | undefined {
+  return known.find((inbox) => keyId(inbox.publicKey) === keyId(publicKey));
+}
+
+/** Puts an inbox first: the one in use. */
+function remember(inbox: KnownInbox): void {
+  known = [inbox, ...known.filter((other) => keyId(other.publicKey) !== keyId(inbox.publicKey))];
+  save();
 }
 
 async function toInbox(result: PrfResult, email: string | undefined): Promise<InboxKeyPair> {
@@ -56,51 +91,67 @@ async function toInbox(result: PrfResult, email: string | undefined): Promise<In
   result.prf.fill(0);
   const inbox = await keyPairFromSeed(seed);
   seed.fill(0);
-  current = inbox;
-  const sameInbox = known && toBase64Url(known.publicKey) === toBase64Url(inbox.publicKey);
-  remember({ publicKey: inbox.publicKey, email: email ?? (sameInbox ? known?.email : undefined) });
+  unlocked = [inbox, ...unlocked.filter((other) => keyId(other.publicKey) !== keyId(inbox.publicKey))];
+  remember({ publicKey: inbox.publicKey, email: email ?? find(inbox.publicKey)?.email });
   return inbox;
 }
 
-/** The unlocked inbox, if the passkey was used during this visit. */
-export function currentInbox(): InboxKeyPair | null {
-  return current;
+/** Inboxes unlocked with their passkey during this visit, last one first. */
+export function unlockedInboxes(): readonly InboxKeyPair[] {
+  return unlocked;
 }
 
-/** The user's own inbox as this browser knows it, unlocked or not. */
+/** The inbox in use, as this browser knows it, unlocked or not. */
 export function knownInbox(): KnownInbox | null {
+  return known[0] ?? null;
+}
+
+/** All inboxes this browser knows, the one in use first. */
+export function knownInboxes(): readonly KnownInbox[] {
   return known;
 }
 
-/** Adds the owner's e-mail to the remembered inbox (for older passkeys that lack it). */
+/** The known inbox for an e-mail address, if any. */
+export function inboxFor(email: string): KnownInbox | undefined {
+  return known.find((inbox) => inbox.email === email);
+}
+
+/** Makes a known inbox the one in use. */
+export function useInbox(publicKey: Bytes): void {
+  const inbox = find(publicKey);
+  if (inbox) {
+    remember(inbox);
+  }
+}
+
+/** Adds the owner's e-mail to the inbox in use (for passkeys that lack it). */
 export function setInboxEmail(value: string): void {
   const email = cleanEmail(value);
-  if (known && email) {
-    remember({ ...known, email });
+  if (known[0] && email) {
+    remember({ ...known[0], email });
   }
 }
 
-/** Removes the remembered inbox from this browser. The passkey is unaffected. */
-export function forgetInbox(): void {
-  known = null;
-  current = null;
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Nothing stored.
-  }
+/** Removes an inbox from this browser. Its passkey is unaffected. */
+export function forgetInbox(publicKey: Bytes): void {
+  known = known.filter((inbox) => keyId(inbox.publicKey) !== keyId(publicKey));
+  unlocked = unlocked.filter((inbox) => keyId(inbox.publicKey) !== keyId(publicKey));
+  save();
 }
 
-/**
- * The user's own e-mail: their inbox's, or the address a message they read
- * was sent to. Used to address replies.
- */
+/** An inbox's e-mail: its own, or the address a message to it was sent to. */
+export function emailOf(inbox: KnownInbox): string | undefined {
+  return inbox.email ?? (reader?.key === keyId(inbox.publicKey) ? reader.email : undefined);
+}
+
+/** The user's e-mail as far as this visit knows it; to prefill forms. */
 export function sessionEmail(): string | undefined {
-  return known?.email ?? readerEmail;
+  return known[0]?.email ?? reader?.email;
 }
 
-export function setReaderEmail(value: string | undefined): void {
-  readerEmail = value || undefined;
+/** Remembers, for this visit, the address a message to an inbox was sent to. */
+export function setReaderEmail(publicKey: Bytes, value: string): void {
+  reader = { key: keyId(publicKey), email: value };
 }
 
 export async function createInbox(ownEmail: string): Promise<InboxKeyPair> {

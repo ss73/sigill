@@ -6,7 +6,8 @@ import { h } from "../dom";
 import { t } from "../i18n";
 import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
-import { currentInbox, passkeyErrorMessage, sessionEmail, setReaderEmail, unlockInbox } from "../session";
+import { passkeyErrorMessage, setReaderEmail, unlockInbox, unlockedInboxes, useInbox } from "../session";
+import type { InboxKeyPair } from "../../crypto";
 import { actions, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
 /** Distinguishes "not for this inbox" from passkey trouble and broken links. */
@@ -64,13 +65,37 @@ export function openView(envelope?: string): HTMLElement {
   const slot = messageSlot();
   const problem = rpIdProblem();
 
-  async function reveal(useCurrent: boolean): Promise<void> {
+  /** An inbox already unlocked during this visit that the message is for. */
+  async function openUnlocked(): Promise<{ inbox: InboxKeyPair; opened: Awaited<ReturnType<typeof openMessage>> } | null> {
+    for (const inbox of unlockedInboxes()) {
+      try {
+        return { inbox, opened: await openMessage(inbox, envelope!) };
+      } catch (error) {
+        if (decryptProblem(error) !== "wrong-inbox") {
+          throw error;
+        }
+      }
+    }
+    return null;
+  }
+
+  /** Without a passkey prompt if one of this visit's unlocked inboxes fits. */
+  async function reveal(withPasskey: boolean): Promise<void> {
     slot.show(null);
     try {
-      const inbox = (useCurrent && currentInbox()) || (await unlockInbox());
-      const { text, replyTo, to } = await openMessage(inbox, envelope!);
-      if (to && !sessionEmail()) {
-        setReaderEmail(to); // lets a reply carry the reader's address back
+      let found = await openUnlocked();
+      if (!found && withPasskey) {
+        const inbox = await unlockInbox();
+        found = { inbox, opened: await openMessage(inbox, envelope!) };
+      }
+      if (!found) {
+        return;
+      }
+      const { text, replyTo, to } = found.opened;
+      // A reply from here comes from this inbox.
+      useInbox(found.inbox.publicKey);
+      if (to) {
+        setReaderEmail(found.inbox.publicKey, to); // for an inbox that doesn't know its address
       }
       content.replaceChildren(
         title(t.open.messageTitle, replyTo?.email ? t.open.from(replyTo.email) : undefined),
@@ -114,7 +139,7 @@ export function openView(envelope?: string): HTMLElement {
     }
   }
 
-  const openButton = button(t.open.openButton, () => reveal(false), { icon: "key", testId: "open-message" });
+  const openButton = button(t.open.openButton, () => reveal(true), { icon: "key", testId: "open-message" });
   if (problem) {
     openButton.disabled = true;
     slot.show(notice("error", problem));
@@ -137,8 +162,8 @@ export function openView(envelope?: string): HTMLElement {
   );
 
   // Already unlocked during this visit: show the message without another prompt.
-  if (currentInbox() && !problem) {
-    void reveal(true);
+  if (unlockedInboxes().length && !problem) {
+    void reveal(false);
   }
 
   return page(content);

@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Dla pewności zapytaj odbiorcę${email ? ` (${email})` : ""} telefonicznie lub osobiście, czy w swojej skrzynce widzi ten sam kod. ` +
       "Jeśli się zgadza, nikt nie podmienił linku po drodze.",
     replyOn: "Bezpieczna odpowiedź włączona. ",
+    replyAddress: "Odpowiedzi trafiają na",
     replyOnText: (email?: string) => `${email ?? "Odbiorca"} może odpowiedzieć jednym kliknięciem, a odpowiedź zostanie zaszyfrowana dla twojej skrzynki. `,
     replyRemove: "Usuń",
     replyAdd: "Pozwól na bezpieczną odpowiedź",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Zostanie dodany do twojego linku, żeby wiadomości były automatycznie adresowane do ciebie.",
     create: "Utwórz moją skrzynkę",
     emailMissing: "Najpierw wpisz swój adres e-mail.",
+    addAddress: "Dodaj inny adres…",
+    addTitle: "Dodaj inny adres",
+    backToLink: "Wróć do mojego linku",
+    unnamed: "Skrzynka bez adresu",
     forget: "Zapomnij tę skrzynkę w tej przeglądarce",
     unlock: "Mam już skrzynkę: pokaż mój link",
     fact1: "Pojawi się prośba o zapisanie klucza dostępu. Potwierdź Face ID, odciskiem palca lub PIN-em urządzenia.",

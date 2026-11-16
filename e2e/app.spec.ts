@@ -54,9 +54,9 @@ test("receive: create inbox, get written to, open the message after a reload", a
 
   // The browser keeps only the public link (key and e-mail), nothing secret.
   const stored = await page.evaluate(() => ({ ...localStorage }));
-  expect(Object.keys(stored)).toEqual(["sigill.inbox"]);
+  expect(Object.keys(stored)).toEqual(["sigill.inboxes"]);
   const inboxKey = new URLSearchParams(new URL(inboxUrl).hash.slice(1)).get("to");
-  expect(JSON.parse(stored["sigill.inbox"]!)).toEqual({ k: inboxKey, e: "alice@example.com" });
+  expect(JSON.parse(stored["sigill.inboxes"]!)).toEqual([{ k: inboxKey, e: "alice@example.com" }]);
   expect(await page.evaluate(() => sessionStorage.length)).toBe(0);
 });
 
@@ -181,8 +181,8 @@ test("secure reply asks for your address when the browser doesn't know it", asyn
 
   // Like a passkey from before e-mail was required: the inbox, no address.
   await bob.evaluate(() => {
-    const stored = JSON.parse(localStorage.getItem("sigill.inbox")!);
-    localStorage.setItem("sigill.inbox", JSON.stringify({ k: stored.k }));
+    const [stored] = JSON.parse(localStorage.getItem("sigill.inboxes")!);
+    localStorage.setItem("sigill.inboxes", JSON.stringify([{ k: stored.k }]));
   });
   await bob.goto(aliceLink);
   await bob.reload();
@@ -307,6 +307,105 @@ test("a revisit shows your link without a passkey; forgetting it asks again", as
   await expect(page.getByTestId("inbox-link")).toHaveValue(inboxUrl);
 });
 
+test("several addresses: each has its own inbox, and the link page says which it is", async ({ page }) => {
+  await addAuthenticator(page);
+  const homeLink = await createInbox(page, "stellan@home.example");
+  await expect(page.getByTestId("inbox-address")).toHaveValue("0");
+  await expect(page.getByTestId("inbox-address").locator("option:checked")).toHaveText("stellan@home.example");
+
+  // Add a second address: a new inbox, with a way back.
+  await page.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Add another address");
+  await expect(page.getByTestId("your-email")).toHaveValue("");
+  await page.getByTestId("back-to-link").click();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(homeLink);
+  await page.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
+  await page.getByTestId("your-email").fill("stellan@work.example");
+  await page.getByTestId("create-inbox").click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your inbox is ready");
+  const workLink = await page.getByTestId("inbox-link").inputValue();
+  expect(workLink).toContain("e=stellan%40work.example");
+  expect(workLink).not.toBe(homeLink);
+
+  // Both are remembered; switching needs no passkey.
+  await page.reload();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(workLink);
+  await page.getByTestId("inbox-address").selectOption({ label: "stellan@home.example" });
+  await expect(page.getByTestId("inbox-link")).toHaveValue(homeLink);
+
+  // Adding an address that already has an inbox here just switches to it.
+  await page.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
+  await page.getByTestId("your-email").fill("stellan@work.example");
+  await page.getByTestId("create-inbox").click();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(workLink);
+
+  // Forgetting one keeps the other.
+  await page.getByTestId("forget-inbox").click();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(homeLink);
+  await expect(page.getByTestId("inbox-address").locator("option")).toHaveText(["stellan@home.example", "Add another address…"]);
+});
+
+test("several addresses: a reply comes from the address the message was sent to", async ({ browser }) => {
+  const me = await (await browser.newContext()).newPage();
+  const friend = await (await browser.newContext()).newPage();
+  await addAuthenticator(me);
+  await addAuthenticator(friend);
+  const friendLink = await createInbox(friend, "friend@example.com");
+  const homeLink = await createInbox(me, "me@home.example");
+  await me.getByTestId("inbox-address").selectOption({ label: "Add another address…" });
+  await me.getByTestId("your-email").fill("me@work.example");
+  await me.getByTestId("create-inbox").click();
+  await expect(me.getByRole("heading", { level: 1 })).toHaveText("Your inbox is ready");
+
+  // Work is in use, but the message was sent to home: opening it (in the
+  // same visit, so both are unlocked and no passkey is asked) picks home.
+  const message = firstLink(parseMailto(await writeMessage(friend, homeLink, "to your home address")).body);
+  await me.goto(message);
+  await expect(me.getByTestId("message-text")).toHaveText("to your home address");
+  await me.getByTestId("reply").click();
+  await expect(me.getByTestId("reply-address").locator("option:checked")).toHaveText("me@home.example");
+
+  // And can be changed.
+  await me.getByTestId("reply-address").selectOption({ label: "me@work.example" });
+  const reply = firstLink(parseMailto(await writeMessageHere(me, "from work")).body);
+  await friend.goto(reply);
+  await friend.reload();
+  await friend.getByTestId("open-message").click();
+  await expect(friend.getByRole("heading", { level: 1 }).locator("..")).toContainText("From me@work.example");
+  await friend.getByTestId("reply").click();
+  expect(parseMailto(await writeMessageHere(friend, "ok")).to).toBe("me@work.example");
+  void friendLink;
+});
+
+test("asked for the link of an address with no inbox here: set that one up", async ({ page }) => {
+  await addAuthenticator(page);
+  const homeLink = await createInbox(page, "me@home.example");
+  await page.goto("/#inbox&reply=boss%40example.com&e=me%40work.example");
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Add another address");
+  await expect(page.getByTestId("your-email")).toHaveValue("me@work.example");
+  await page.getByTestId("back-to-link").click();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(homeLink);
+
+  // An address that has one: straight to its link.
+  await page.goto("/#inbox&reply=boss%40example.com&e=me%40home.example");
+  await page.reload();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(homeLink);
+});
+
+test("an inbox remembered before several were possible is kept", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() =>
+    localStorage.setItem("sigill.inbox", JSON.stringify({ k: "BnEHoRJNd-UuyybWxKEznMN6t7M4Xr-PtqhhXDoAbWA", e: "old@example.com" })),
+  );
+  await page.goto("/#inbox");
+  await page.reload();
+  await expect(page.getByTestId("inbox-link")).toHaveValue(/#to=BnEHoRJNd-UuyybWxKEznMN6t7M4Xr-PtqhhXDoAbWA&e=old%40example\.com$/);
+  expect(await page.evaluate(() => ({ ...localStorage }))).toEqual({
+    "sigill.inboxes": JSON.stringify([{ k: "BnEHoRJNd-UuyybWxKEznMN6t7M4Xr-PtqhhXDoAbWA", e: "old@example.com" }]),
+  });
+});
+
 test("lookalike and hidden-character addresses in a link can't pass for real ones", async ({ page }) => {
   const key = Buffer.from(new Uint8Array(32).fill(9)).toString("base64url");
   const heading = page.getByRole("heading", { level: 1 });
@@ -381,7 +480,7 @@ test("a passkey made by another site on the same domain isn't taken for an inbox
   await page.getByTestId("unlock-inbox").click();
   await expect(page.getByRole("alert")).toContainText("isn’t a Sigill inbox");
   await expect(page.getByTestId("unlock-inbox")).toBeVisible();
-  expect(await page.evaluate(() => localStorage.getItem("sigill.inbox"))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem("sigill.inboxes"))).toBeNull();
 });
 
 test("the setup page shows no error where passkey autofill isn't possible", async ({ page }) => {

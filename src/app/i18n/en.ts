@@ -74,6 +74,7 @@ export const en = {
       `For extra certainty, ask ${email ?? "the recipient"} by phone or in person whether their inbox shows the same code. ` +
       "If it matches, nobody has swapped the link on the way.",
     replyOn: "Secure reply is on. ",
+    replyAddress: "Replies go to",
     replyOnText: (email?: string) => `${email ?? "The recipient"} can answer with one click, and the reply is encrypted for your inbox. `,
     replyRemove: "Remove",
     replyAdd: "Let them reply securely",
@@ -94,6 +95,10 @@ export const en = {
     emailHelp: "It's added to your link so that messages are addressed to you automatically.",
     create: "Create my inbox",
     emailMissing: "Please enter your e-mail address first.",
+    addAddress: "Add another address…",
+    addTitle: "Add another address",
+    backToLink: "Back to my link",
+    unnamed: "Inbox without an address",
     forget: "Forget this inbox on this browser",
     unlock: "I already have an inbox: show my link",
     fact1: "You'll be asked to save a passkey. Confirm with Face ID, fingerprint or your device PIN.",

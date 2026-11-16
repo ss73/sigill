@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Voor extra zekerheid: vraag ${email ?? "de ontvanger"} telefonisch of persoonlijk of daar dezelfde code in de inbox staat. ` +
       "Komt die overeen, dan heeft niemand de link onderweg verwisseld.",
     replyOn: "Beveiligd antwoorden staat aan. ",
+    replyAddress: "Antwoorden gaan naar",
     replyOnText: (email?: string) => `${email ?? "De ontvanger"} kan met één klik antwoorden, en het antwoord wordt versleuteld voor jouw inbox. `,
     replyRemove: "Verwijderen",
     replyAdd: "Laat de ontvanger beveiligd antwoorden",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Het wordt aan je link toegevoegd, zodat berichten automatisch aan jou gericht zijn.",
     create: "Mijn inbox aanmaken",
     emailMissing: "Vul eerst je e-mailadres in.",
+    addAddress: "Ander adres toevoegen…",
+    addTitle: "Ander adres toevoegen",
+    backToLink: "Terug naar mijn link",
+    unnamed: "Inbox zonder adres",
     forget: "Vergeet deze inbox in deze browser",
     unlock: "Ik heb al een inbox: toon mijn link",
     fact1: "Je wordt gevraagd een toegangssleutel op te slaan. Bevestig met Face ID, je vingerafdruk of de pincode van je apparaat.",

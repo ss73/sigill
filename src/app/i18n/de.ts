@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Zur Sicherheit können Sie ${email ?? "den Empfänger"} telefonisch oder persönlich fragen, ob dort im Postfach derselbe Code angezeigt wird. ` +
       "Stimmt er überein, hat niemand den Link unterwegs ausgetauscht.",
     replyOn: "Sichere Antwort ist aktiv. ",
+    replyAddress: "Antworten gehen an",
     replyOnText: (email?: string) => `${email ?? "Der Empfänger"} kann mit einem Klick antworten, und die Antwort wird für Ihr Postfach verschlüsselt. `,
     replyRemove: "Entfernen",
     replyAdd: "Sichere Antwort ermöglichen",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "Wird Ihrem Link hinzugefügt, damit Nachrichten automatisch an Sie adressiert sind.",
     create: "Mein Postfach erstellen",
     emailMissing: "Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.",
+    addAddress: "Weitere Adresse hinzufügen …",
+    addTitle: "Weitere Adresse hinzufügen",
+    backToLink: "Zurück zu meinem Link",
+    unnamed: "Postfach ohne Adresse",
     forget: "Postfach in diesem Browser vergessen",
     unlock: "Ich habe schon ein Postfach: Link anzeigen",
     fact1: "Sie werden gebeten, einen Passkey zu sichern. Bestätigen Sie mit Face ID, Fingerabdruck oder Geräte-PIN.",

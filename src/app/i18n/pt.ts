@@ -72,6 +72,7 @@ export const messages: Messages = {
       `Para ter mais certeza, pergunte ${email ? `a ${email}` : "ao destinatário"} por telefone ou pessoalmente se a caixa de entrada mostra o mesmo código. ` +
       "Se coincidir, ninguém trocou o link pelo caminho.",
     replyOn: "Resposta segura ativada. ",
+    replyAddress: "As respostas vão para",
     replyOnText: (email?: string) => `${email ?? "O destinatário"} pode responder com um clique, e a resposta chega encriptada à sua caixa de entrada. `,
     replyRemove: "Remover",
     replyAdd: "Permitir resposta segura",
@@ -92,6 +93,10 @@ export const messages: Messages = {
     emailHelp: "É adicionado ao link para que as mensagens venham endereçadas automaticamente.",
     create: "Criar a minha caixa de entrada",
     emailMissing: "Introduza primeiro o endereço de e-mail.",
+    addAddress: "Adicionar outro endereço…",
+    addTitle: "Adicionar outro endereço",
+    backToLink: "Voltar ao meu link",
+    unnamed: "Caixa sem endereço",
     forget: "Esquecer esta caixa de entrada neste navegador",
     unlock: "Já tenho uma caixa de entrada: mostrar o meu link",
     fact1: "Será pedido que guarde uma chave de acesso. Confirme com Face ID, impressão digital ou o PIN do dispositivo.",

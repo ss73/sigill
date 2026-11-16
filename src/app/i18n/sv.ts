@@ -70,6 +70,7 @@ export const messages: Messages = {
       `För extra säkerhet kan du fråga ${email ?? "mottagaren"} per telefon eller öga mot öga om samma kod visas i inkorgen. ` +
       "Stämmer den har ingen bytt ut länken på vägen.",
     replyOn: "Säkert svar är på. ",
+    replyAddress: "Svar går till",
     replyOnText: (email?: string) => `${email ?? "Mottagaren"} kan svara med ett klick, och svaret krypteras för din inkorg. `,
     replyRemove: "Ta bort",
     replyAdd: "Låt mottagaren svara säkert",
@@ -90,6 +91,10 @@ export const messages: Messages = {
     emailHelp: "Den läggs till i din länk så att meddelanden adresseras till dig automatiskt.",
     create: "Skapa min inkorg",
     emailMissing: "Fyll i din mejladress först.",
+    addAddress: "Lägg till en annan adress…",
+    addTitle: "Lägg till en annan adress",
+    backToLink: "Tillbaka till min länk",
+    unnamed: "Inkorg utan adress",
     forget: "Glöm inkorgen i den här webbläsaren",
     unlock: "Jag har redan en inkorg: visa min länk",
     fact1: "Du ombeds spara en lösennyckel. Bekräfta med Face ID, fingeravtryck eller enhetens PIN-kod.",

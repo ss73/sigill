@@ -70,6 +70,7 @@ export const messages: Messages = {
       `For ekstra sikkerhed kan du spørge ${email ?? "modtageren"} over telefonen eller ansigt til ansigt, om indbakken viser den samme kode. ` +
       "Hvis den passer, har ingen byttet linket ud undervejs.",
     replyOn: "Sikkert svar er slået til. ",
+    replyAddress: "Svar går til",
     replyOnText: (email?: string) => `${email ?? "Modtageren"} kan svare med ét klik, og svaret krypteres til din indbakke. `,
     replyRemove: "Fjern",
     replyAdd: "Lad modtageren svare sikkert",
@@ -90,6 +91,10 @@ export const messages: Messages = {
     emailHelp: "Den føjes til dit link, så beskeder automatisk bliver adresseret til dig.",
     create: "Opret min indbakke",
     emailMissing: "Indtast din e-mailadresse først.",
+    addAddress: "Tilføj en anden adresse…",
+    addTitle: "Tilføj en anden adresse",
+    backToLink: "Tilbage til mit link",
+    unnamed: "Indbakke uden adresse",
     forget: "Glem indbakken i denne browser",
     unlock: "Jeg har allerede en indbakke: vis mit link",
     fact1: "Du bliver bedt om at gemme en adgangsnøgle. Bekræft med Face ID, fingeraftryk eller enhedens pinkode.",

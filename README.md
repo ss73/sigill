@@ -42,6 +42,11 @@ Pages projects. To host your own copy, give it a subdomain and set
   so a revisit shows the link without a prompt; *Forget this inbox on this
   browser* removes it. The e-mail is also stored in the passkey's user ID,
   so unlocking on another device brings it back.
+- **Several addresses:** one inbox (and passkey) per e-mail address. The
+  link page's address list switches between them without a prompt, and
+  *Add another address…* sets up the next. Opening a message makes its inbox
+  the one in use, so a secure reply comes from the address it was sent to;
+  the reply panel can change that.
 - **Send:** click someone's secure link → write → *Send by e-mail* (the mail
   program opens with the encrypted link ready; long messages are copied for
   pasting instead).
