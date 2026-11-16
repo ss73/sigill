@@ -112,7 +112,7 @@ export function copyButton(
   return btn;
 }
 
-export function notice(kind: "info" | "success" | "error", ...children: (Node | string)[]): HTMLElement {
+export function notice(kind: "info" | "success" | "error", ...children: (Node | string | null)[]): HTMLElement {
   const iconName: IconName = kind === "error" ? "alert" : kind === "success" ? "check" : "key";
   return h(
     "div",

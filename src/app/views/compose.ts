@@ -6,7 +6,7 @@ import { lang, messagesFor, t, type Lang } from "../i18n";
 import { appBase, cleanEmail, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
-import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
+import { createInbox, knownInbox, passkeyErrorMessage, sessionEmail, setInboxEmail, suggestedInbox, unlockInbox, type KnownInbox } from "../session";
 import { PasskeyError } from "../../passkey";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
@@ -101,6 +101,24 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     }
   }
 
+  // Only passkeys from before e-mail was required lack it, opened in a
+  // browser that doesn't know the address either. Without it the reply
+  // would reach the right inbox but leave the e-mail's "To" empty.
+  function replyEmailField(): HTMLElement {
+    const input = h("input", {
+      type: "email",
+      autocomplete: "email",
+      required: true,
+      placeholder: t.common.emailPlaceholder,
+      "data-testid": "reply-email",
+    });
+    input.addEventListener("input", () => {
+      setInboxEmail(input.value);
+      void update();
+    });
+    return field(t.common.yourEmail, input, t.inbox.linkEmailHelp);
+  }
+
   function renderReply(): void {
     if (replyInbox) {
       replyPanel.replaceChildren(
@@ -108,6 +126,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
           "success",
           h("strong", null, t.compose.replyOn),
           t.compose.replyOnText(recipientEmail),
+          (replyInbox.email ?? sessionEmail()) ? null : replyEmailField(),
           button(
             t.compose.replyRemove,
             () => {

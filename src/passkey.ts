@@ -190,7 +190,7 @@ export async function createInboxPasskey(rpId: string, label: string, userId: By
     }
     // PRF enabled (or not reported): a follow-up assertion yields the value.
     const result = await evaluatePrf(rpId, credential.rawId);
-    return { ...result, details: { ...details, ...result.details, step: "create+get" } };
+    return { ...result, userHandle: userId, details: { ...details, ...result.details, step: "create+get" } };
   } catch (error) {
     throw wrapError(error);
   }
@@ -244,7 +244,15 @@ export async function suggestInboxPasskey(rpId: string): Promise<PrfResult | nul
     return null;
   }
   try {
-    return prfResult(credential, "autofill") ?? (await evaluatePrf(rpId, credential.rawId));
+    const picked = prfResult(credential, "autofill");
+    if (picked) {
+      return picked;
+    }
+    // The follow-up names the passkey, so the authenticator may leave out
+    // the user ID (which carries the e-mail); the pick itself had it.
+    const result = await evaluatePrf(rpId, credential.rawId);
+    const userHandle = (credential.response as AuthenticatorAssertionResponse).userHandle;
+    return { ...result, userHandle: result.userHandle ?? (userHandle ? toBytes(userHandle) : null) };
   } catch (error) {
     throw wrapError(error);
   }

@@ -171,6 +171,37 @@ test("secure reply: a two-person conversation, each reply one click away", async
   await expect(bob.getByTestId("reply")).toBeVisible();
 });
 
+test("secure reply asks for your address when the browser doesn't know it", async ({ browser }) => {
+  const alice = await (await browser.newContext()).newPage();
+  const bob = await (await browser.newContext()).newPage();
+  await addAuthenticator(alice);
+  await addAuthenticator(bob);
+  const aliceLink = await createInbox(alice, "alice@example.com");
+  await createInbox(bob, "bob@example.com");
+
+  // Like a passkey from before e-mail was required: the inbox, no address.
+  await bob.evaluate(() => {
+    const stored = JSON.parse(localStorage.getItem("sigill.inbox")!);
+    localStorage.setItem("sigill.inbox", JSON.stringify({ k: stored.k }));
+  });
+  await bob.goto(aliceLink);
+  await bob.reload();
+  await expect(bob.getByTestId("reply-panel")).toContainText("Secure reply is on");
+  await bob.getByTestId("reply-email").fill("bob@example.com");
+  const message = firstLink(parseMailto(await writeMessageHere(bob, "Write back")).body);
+
+  await alice.goto(message);
+  await alice.reload();
+  await alice.getByTestId("open-message").click();
+  await alice.getByTestId("reply").click();
+  expect(parseMailto(await writeMessageHere(alice, "Done")).to).toBe("bob@example.com");
+
+  // Remembered from then on.
+  await bob.goto(aliceLink);
+  await bob.reload();
+  await expect(bob.getByTestId("reply-email")).toHaveCount(0);
+});
+
 test("secure reply can be added with the passkey, or left out", async ({ page }) => {
   await addAuthenticator(page);
   const ownLink = await createInbox(page, "carol@example.com");
