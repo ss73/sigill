@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Ihr Browser oder Passwort-Manager kann noch kein sicheres Postfach speichern. Versuchen Sie Safari, Chrome oder Edge mit den integrierten Passkeys Ihres Geräts oder eine aktuelle Version von 1Password oder Bitwarden.",
     unavailable: "Dieser Browser unterstützt keine Passkeys. Bitte nutzen Sie ein aktuelles Safari, Chrome, Edge oder Firefox.",
+    notSigill:
+      "Dieser Passkey ist kein Sigill-Postfach: Er gehört zu einer anderen Website unter derselben Adresse. Es wurde nichts geändert. Versuche es erneut und wähle den Passkey, der nach deiner E-Mail-Adresse benannt ist.",
     failed: (details: string) => `Beim Passkey ist etwas schiefgelaufen: ${details}`,
   },
 

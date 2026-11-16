@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "O navegador ou gestor de palavras-passe ainda não suporta uma caixa de entrada segura. Experimente o Safari, Chrome ou Edge com as chaves de acesso integradas no dispositivo, ou uma versão recente do 1Password ou Bitwarden.",
     unavailable: "Este navegador não suporta chaves de acesso. Use uma versão atualizada do Safari, Chrome, Edge ou Firefox.",
+    notSigill:
+      "Essa chave de acesso não é uma caixa Sigill: pertence a outro site no mesmo endereço. Nada foi alterado. Tente novamente e escolha a chave com o nome do seu endereço de e-mail.",
     failed: (details: string) => `Ocorreu um problema com a chave de acesso: ${details}`,
   },
 

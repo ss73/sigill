@@ -141,6 +141,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Nettleseren eller passordbehandleren din kan ikke håndtere en sikker innboks ennå. Prøv Safari, Chrome eller Edge med enhetens innebygde passnøkler, eller en nyere versjon av 1Password eller Bitwarden.",
     unavailable: "Denne nettleseren støtter ikke passnøkler. Bruk en oppdatert versjon av Safari, Chrome, Edge eller Firefox.",
+    notSigill:
+      "Den passnøkkelen er ikke en Sigill-innboks: den hører til et annet nettsted på samme adresse. Ingenting er endret. Prøv igjen, og velg passnøkkelen som har e-postadressen din som navn.",
     failed: (details: string) => `Noe gikk galt med passnøkkelen: ${details}`,
   },
 

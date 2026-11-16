@@ -15,9 +15,24 @@ const PREFIX = "sigill:";
  * ID made from the e-mail alone would let a second "create" with the same
  * address silently destroy the first inbox's key.
  */
-export function userIdFor(email: string): Bytes | undefined {
-  const id = utf8Encode(`${PREFIX}${email}#${toBase64Url(crypto.getRandomValues(new Uint8Array(6)))}`);
-  return id.length <= 64 ? id : undefined;
+export function userIdFor(email: string): Bytes {
+  const random = `#${toBase64Url(crypto.getRandomValues(new Uint8Array(6)))}`;
+  const id = utf8Encode(`${PREFIX}${email}${random}`);
+  // WebAuthn's 64-byte limit: a very long address is left out (and asked for).
+  return id.length <= 64 ? id : utf8Encode(`${PREFIX}${random}`);
+}
+
+/**
+ * Whether a passkey was made by Sigill. Other sites under the same domain
+ * share its passkeys; one of those would yield a valid-looking but unrelated
+ * key, so it must not be taken for an inbox.
+ */
+export function isInboxUserId(id: Bytes | null): boolean {
+  try {
+    return id !== null && utf8Decode(id).startsWith(PREFIX);
+  } catch {
+    return false;
+  }
 }
 
 /** The e-mail in a user ID; also reads IDs from before the random part. */

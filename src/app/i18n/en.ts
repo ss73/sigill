@@ -145,6 +145,8 @@ export const en = {
     prfUnsupported:
       "Your browser or password manager can't hold a secure inbox yet. Try Safari, Chrome or Edge with your device's built-in passkeys, or a recent 1Password or Bitwarden.",
     unavailable: "This browser doesn't support passkeys. Please use an up-to-date Safari, Chrome, Edge or Firefox.",
+    notSigill:
+      "That passkey isn’t a Sigill inbox: it belongs to another site on the same address. Nothing has changed. Try again and pick the passkey named after your e-mail address.",
     failed: (details: string) => `Something went wrong with the passkey: ${details}`,
   },
 

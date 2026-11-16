@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Twoja przeglądarka lub menedżer haseł nie obsługuje jeszcze bezpiecznej skrzynki. Użyj Safari, Chrome lub Edge z wbudowanymi kluczami dostępu urządzenia albo aktualnej wersji 1Password lub Bitwarden.",
     unavailable: "Ta przeglądarka nie obsługuje kluczy dostępu. Użyj aktualnej wersji Safari, Chrome, Edge lub Firefox.",
+    notSigill:
+      "Ten klucz dostępu nie jest skrzynką Sigill: należy do innej witryny pod tym samym adresem. Nic się nie zmieniło. Spróbuj ponownie i wybierz klucz nazwany Twoim adresem e-mail.",
     failed: (details: string) => `Coś poszło nie tak z kluczem dostępu: ${details}`,
   },
 

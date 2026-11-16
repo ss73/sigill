@@ -361,6 +361,29 @@ test("an existing inbox is offered in the e-mail field's autofill, so no duplica
   await expect(page.getByTestId("reply-panel")).toContainText("Secure reply is on");
 });
 
+test("a passkey made by another site on the same domain isn't taken for an inbox", async ({ page }) => {
+  await addAuthenticator(page);
+  await page.goto("/");
+  await page.getByTestId("choose-receive").click();
+  // Another app under the same domain, with PRF, like Sigill's.
+  await page.evaluate(async () => {
+    await navigator.credentials.create({
+      publicKey: {
+        rp: { id: location.hostname, name: "Other app" },
+        user: { id: new TextEncoder().encode("user-42"), name: "someone", displayName: "someone" },
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+        authenticatorSelection: { residentKey: "required", userVerification: "required" },
+        extensions: { prf: {} },
+      },
+    });
+  });
+  await page.getByTestId("unlock-inbox").click();
+  await expect(page.getByRole("alert")).toContainText("isn’t a Sigill inbox");
+  await expect(page.getByTestId("unlock-inbox")).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("sigill.inbox"))).toBeNull();
+});
+
 test("the setup page shows no error where passkey autofill isn't possible", async ({ page }) => {
   // No authenticator at all: the autofill offer must fail silently.
   await page.goto("/#inbox");

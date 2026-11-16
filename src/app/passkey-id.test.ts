@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { utf8Decode, utf8Encode } from "../crypto";
-import { emailFromUserId, userIdFor } from "./passkey-id";
+import { emailFromUserId, isInboxUserId, userIdFor } from "./passkey-id";
 
 describe("passkey user ID", () => {
   it("is unique per passkey, so a password manager never replaces an existing inbox", () => {
@@ -20,6 +20,17 @@ describe("passkey user ID", () => {
   it("falls back to no e-mail for random or overlong IDs", () => {
     expect(emailFromUserId(crypto.getRandomValues(new Uint8Array(16)))).toBeUndefined();
     expect(emailFromUserId(null)).toBeUndefined();
-    expect(userIdFor(`${"a".repeat(50)}@example.com`)).toBeUndefined();
+    const long = userIdFor(`${"a".repeat(50)}@example.com`);
+    expect(long.length).toBeLessThanOrEqual(64);
+    expect(emailFromUserId(long)).toBeUndefined();
+    expect(isInboxUserId(long)).toBe(true);
+  });
+
+  it("tells Sigill's passkeys from other sites' on the same domain", () => {
+    expect(isInboxUserId(userIdFor("anna@example.com"))).toBe(true);
+    expect(isInboxUserId(new TextEncoder().encode("sigill:anna@example.com"))).toBe(true);
+    expect(isInboxUserId(new TextEncoder().encode("user-42"))).toBe(false);
+    expect(isInboxUserId(crypto.getRandomValues(new Uint8Array(16)))).toBe(false);
+    expect(isInboxUserId(null)).toBe(false);
   });
 });

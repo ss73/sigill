@@ -141,6 +141,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Selaimesi tai salasanojen hallintasi ei vielä tue suojattua postilaatikkoa. Kokeile Safari-, Chrome- tai Edge-selainta laitteesi omilla pääsyavaimilla tai uutta 1Password- tai Bitwarden-versiota.",
     unavailable: "Tämä selain ei tue pääsyavaimia. Käytä ajantasaista Safari-, Chrome-, Edge- tai Firefox-selainta.",
+    notSigill:
+      "Tämä pääsyavain ei ole Sigill-postilaatikko: se kuuluu toiselle sivustolle samassa osoitteessa. Mitään ei muutettu. Yritä uudelleen ja valitse pääsyavain, jonka nimi on sähköpostiosoitteesi.",
     failed: (details: string) => `Pääsyavaimen kanssa tapahtui virhe: ${details}`,
   },
 

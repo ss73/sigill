@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Tu navegador o gestor de contraseñas aún no puede alojar una bandeja de entrada segura. Prueba Safari, Chrome o Edge con las llaves de acceso integradas en tu dispositivo, o una versión reciente de 1Password o Bitwarden.",
     unavailable: "Este navegador no admite llaves de acceso. Usa una versión actualizada de Safari, Chrome, Edge o Firefox.",
+    notSigill:
+      "Esa llave de acceso no es una bandeja de Sigill: pertenece a otro sitio en la misma dirección. No ha cambiado nada. Inténtalo de nuevo y elige la llave con el nombre de tu correo electrónico.",
     failed: (details: string) => `Algo ha fallado con la llave de acceso: ${details}`,
   },
 

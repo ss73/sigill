@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Je browser of wachtwoordmanager kan nog geen beveiligde inbox bewaren. Probeer Safari, Chrome of Edge met de ingebouwde toegangssleutels van je apparaat, of een recente versie van 1Password of Bitwarden.",
     unavailable: "Deze browser ondersteunt geen toegangssleutels. Gebruik een recente versie van Safari, Chrome, Edge of Firefox.",
+    notSigill:
+      "Die toegangssleutel is geen Sigill-inbox: hij hoort bij een andere site op hetzelfde adres. Er is niets veranderd. Probeer het opnieuw en kies de toegangssleutel met je e-mailadres als naam.",
     failed: (details: string) => `Er ging iets mis met de toegangssleutel: ${details}`,
   },
 

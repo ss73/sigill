@@ -12,7 +12,7 @@ import { utf8Encode, type Bytes } from "./crypto";
 /** Changing this changes every user's inbox key. Bump only with a migration plan. */
 const PRF_SALT = utf8Encode("sigill v1 inbox prf");
 
-export type PasskeyErrorCode = "unavailable" | "cancelled" | "prf-unsupported" | "failed";
+export type PasskeyErrorCode = "unavailable" | "cancelled" | "prf-unsupported" | "not-sigill" | "failed";
 
 export class PasskeyError extends Error {
   constructor(

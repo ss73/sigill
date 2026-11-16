@@ -141,6 +141,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Din browser eller adgangskodeadministrator kan ikke håndtere en sikker indbakke endnu. Prøv Safari, Chrome eller Edge med enhedens indbyggede adgangsnøgler, eller en nyere version af 1Password eller Bitwarden.",
     unavailable: "Denne browser understøtter ikke adgangsnøgler. Brug en opdateret Safari, Chrome, Edge eller Firefox.",
+    notSigill:
+      "Den adgangsnøgle er ikke en Sigill-indbakke: den hører til et andet websted på samme adresse. Intet er ændret. Prøv igen, og vælg adgangsnøglen med din e-mailadresse som navn.",
     failed: (details: string) => `Noget gik galt med adgangsnøglen: ${details}`,
   },
 

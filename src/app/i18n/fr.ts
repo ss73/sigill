@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Votre navigateur ou votre gestionnaire de mots de passe ne peut pas encore accueillir une boîte de réception sécurisée. Essayez Safari, Chrome ou Edge avec les clés d'accès intégrées à votre appareil, ou une version récente de 1Password ou Bitwarden.",
     unavailable: "Ce navigateur ne prend pas en charge les clés d'accès. Utilisez une version à jour de Safari, Chrome, Edge ou Firefox.",
+    notSigill:
+      "Cette clé d’accès n’est pas une boîte Sigill : elle appartient à un autre site à la même adresse. Rien n’a changé. Réessayez en choisissant la clé qui porte votre adresse e-mail.",
     failed: (details: string) => `Un problème est survenu avec la clé d'accès : ${details}`,
   },
 

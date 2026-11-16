@@ -14,7 +14,7 @@ import { fromBase64Url, keyPairFromSeed, seedFromPrf, toBase64Url, type Bytes, t
 import { PasskeyError, createInboxPasskey, suggestInboxPasskey, unlockInboxPasskey, type PrfResult } from "../passkey";
 import { t } from "./i18n";
 import { cleanEmail } from "./links";
-import { emailFromUserId, userIdFor } from "./passkey-id";
+import { emailFromUserId, isInboxUserId, userIdFor } from "./passkey-id";
 
 /** The public side of an inbox: what its secure link carries. */
 export interface KnownInbox {
@@ -107,8 +107,17 @@ export async function createInbox(ownEmail: string): Promise<InboxKeyPair> {
   return toInbox(await createInboxPasskey(RP_ID, ownEmail, userIdFor(ownEmail)), ownEmail);
 }
 
+/** Refuses passkeys that other sites under the same domain made. */
+function fromSigill(result: PrfResult): PrfResult {
+  if (!isInboxUserId(result.userHandle)) {
+    result.prf.fill(0);
+    throw new PasskeyError("not-sigill", "This passkey was not made by Sigill.");
+  }
+  return result;
+}
+
 export async function unlockInbox(): Promise<InboxKeyPair> {
-  const result = await unlockInboxPasskey(RP_ID);
+  const result = fromSigill(await unlockInboxPasskey(RP_ID));
   return toInbox(result, emailFromUserId(result.userHandle));
 }
 
@@ -119,7 +128,7 @@ export async function unlockInbox(): Promise<InboxKeyPair> {
  */
 export async function suggestedInbox(): Promise<InboxKeyPair | null> {
   const result = await suggestInboxPasskey(RP_ID);
-  return result ? toInbox(result, emailFromUserId(result.userHandle)) : null;
+  return result ? toInbox(fromSigill(result), emailFromUserId(result.userHandle)) : null;
 }
 
 /** Plain-language explanation of a passkey failure. */
@@ -132,6 +141,8 @@ export function passkeyErrorMessage(error: unknown): string {
         return t.passkey.prfUnsupported;
       case "unavailable":
         return t.passkey.unavailable;
+      case "not-sigill":
+        return t.passkey.notSigill;
       case "failed":
         return t.passkey.failed(error.message);
     }

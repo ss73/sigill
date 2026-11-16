@@ -141,6 +141,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Din webbläsare eller lösenordshanterare kan inte hantera en säker inkorg än. Prova Safari, Chrome eller Edge med enhetens inbyggda lösennycklar, eller en ny version av 1Password eller Bitwarden.",
     unavailable: "Den här webbläsaren har inte stöd för lösennycklar. Använd en uppdaterad Safari, Chrome, Edge eller Firefox.",
+    notSigill:
+      "Den lösennyckeln är ingen Sigill-inkorg: den hör till en annan webbplats på samma adress. Inget har ändrats. Försök igen och välj lösennyckeln som har din mejladress som namn.",
     failed: (details: string) => `Något gick fel med lösennyckeln: ${details}`,
   },
 

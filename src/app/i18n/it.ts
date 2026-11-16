@@ -143,6 +143,8 @@ export const messages: Messages = {
     prfUnsupported:
       "Il tuo browser o gestore di password non supporta ancora una casella sicura. Prova Safari, Chrome o Edge con le passkey integrate nel dispositivo, oppure una versione recente di 1Password o Bitwarden.",
     unavailable: "Questo browser non supporta le passkey. Usa una versione aggiornata di Safari, Chrome, Edge o Firefox.",
+    notSigill:
+      "Questa passkey non è una casella Sigill: appartiene a un altro sito sullo stesso indirizzo. Non è cambiato nulla. Riprova e scegli la passkey con il nome del tuo indirizzo e-mail.",
     failed: (details: string) => `Qualcosa è andato storto con la passkey: ${details}`,
   },
 
