@@ -18,6 +18,8 @@
   --surface: #fbf8f1;
   --fg: #1d1a17;
   --muted: #6a6056;
+  /* The list arrow, in --muted. */
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%236a6056' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --border: #d8cebd;
   --field-border: #c9bda9;
   --accent: #9b1c2e;
@@ -57,6 +59,7 @@
     --surface: #18232e;
     --fg: #efe7d8;
     --muted: #9fabb5;
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%239fabb5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --border: #2a3845;
     --field-border: #36475a;
     --accent: #e0566a;
@@ -81,6 +84,7 @@
   --surface: #18232e;
   --fg: #efe7d8;
   --muted: #9fabb5;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%239fabb5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --border: #2a3845;
   --field-border: #36475a;
   --accent: #e0566a;
@@ -345,6 +349,25 @@ select {
   font-size: 1rem;
 }
 
+/*
+ * One arrow for lists and for fields with suggested addresses, the same in
+ * every browser and theme (the native ones differ, and a suggestion field's
+ * only shows on hover in Chrome).
+ */
+select,
+input[list] {
+  appearance: none;
+  padding-right: 2.2rem;
+  background-image: var(--chevron);
+  background-position: right 0.85rem center;
+  background-size: 0.75rem 0.5rem;
+  background-repeat: no-repeat;
+}
+
+input[list]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
 /* Writing a letter: the message itself is in the reading face. */
 textarea {
   font-family: var(--serif);
@@ -607,9 +630,10 @@ input[readonly] {
 
 .topbar select {
   width: auto;
-  padding: 0.35rem 0.5rem;
+  padding: 0.35rem 1.6rem 0.35rem 0.5rem;
   border-color: transparent;
-  background: transparent;
+  background-color: transparent;
+  background-position: right 0.5rem center;
   color: var(--muted);
   font: inherit;
 }
