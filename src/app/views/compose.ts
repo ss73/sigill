@@ -2,6 +2,7 @@
 
 import { fingerprint, type Bytes } from "../../crypto";
 import { h } from "../dom";
+import { keyPicture } from "../key-picture";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { conflictFor, contactFor, rememberContact } from "../contacts";
 import { appBase, cleanEmail, inboxHash, messageLink } from "../links";
@@ -316,8 +317,8 @@ function holdForChangedLink(view: HTMLElement, known: Bytes, to: Bytes, recipien
   const codes = h("div", { class: "codes" });
   void Promise.all([fingerprint(known), fingerprint(to)]).then(([before, now]) =>
     codes.replaceChildren(
-      h("p", null, `${t.compose.knownCode}: `, h("code", { "data-testid": "known-code" }, before)),
-      h("p", null, `${t.compose.newCode}: `, h("code", { "data-testid": "new-code" }, now)),
+      h("figure", null, keyPicture(before, 56), h("figcaption", null, t.compose.knownCode, h("code", { "data-testid": "known-code" }, before))),
+      h("figure", null, keyPicture(now, 56), h("figcaption", null, t.compose.newCode, h("code", { "data-testid": "new-code" }, now))),
     ),
   );
   const warning = notice(

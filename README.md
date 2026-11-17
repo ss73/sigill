@@ -51,6 +51,11 @@ Pages projects. To host your own copy, give it a subdomain and set
   flagged. People can be removed one by one; the settings menu (⚙ in the
   top bar, next to the language) forgets everyone or stops remembering on
   this browser, each after a confirmation. It also holds the theme.
+- **Key pictures:** every security code comes with a small picture drawn
+  from it (a mirrored 5×5 pattern in one of eight colours), in the list of
+  people, on the compose and link pages, and side by side in the
+  changed-link warning. It's for recognising someone at a glance; the code
+  is what proves a link, since the picture carries far fewer bits.
 - **Several addresses:** one inbox (and passkey) per e-mail address. The
   link page's address list switches between them without a prompt, and
   *Add another address…* sets up the next. Opening a message makes its inbox

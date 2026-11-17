@@ -3,6 +3,7 @@
 import { h, icon, type IconName } from "./dom";
 import { LANGUAGES, isLang, t, type Lang } from "./i18n";
 import { THEMES, setTheme, theme, type Theme } from "./theme";
+import { keyPicture } from "./key-picture";
 import { clearContacts, contacts, contactsEnabled, setContactsEnabled } from "./contacts";
 
 export function page(...children: (Node | false | null | undefined)[]): HTMLElement {
@@ -156,7 +157,7 @@ export function securityCode(code: string, explanation: string): HTMLElement {
   return h(
     "details",
     { class: "code" },
-    h("summary", null, `${t.common.securityCode} `, h("code", { "data-testid": "security-code" }, code)),
+    h("summary", null, `${t.common.securityCode} `, keyPicture(code, 20), h("code", { "data-testid": "security-code" }, code)),
     h("p", null, explanation),
   );
 }

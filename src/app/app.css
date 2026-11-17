@@ -18,6 +18,15 @@
   --surface: #fbf8f1;
   --fg: #1d1a17;
   --muted: #6a6056;
+  /* Key pictures: eight colours, told apart in both themes. */
+  --pic-0: #9b1c2e;
+  --pic-1: #2c4a73;
+  --pic-2: #3f6b4a;
+  --pic-3: #a8741a;
+  --pic-4: #6b3f73;
+  --pic-5: #2f6f73;
+  --pic-6: #8a4b2a;
+  --pic-7: #4a5563;
   /* The list arrow, in --muted. */
   --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%236a6056' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --border: #d8cebd;
@@ -59,6 +68,14 @@
     --surface: #18232e;
     --fg: #efe7d8;
     --muted: #9fabb5;
+    --pic-0: #e0566a;
+    --pic-1: #7d9cc4;
+    --pic-2: #7fb08a;
+    --pic-3: #d9a54a;
+    --pic-4: #b48abf;
+    --pic-5: #6fb3b7;
+    --pic-6: #d08a63;
+    --pic-7: #9aa6b4;
     --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%239fabb5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --border: #2a3845;
     --field-border: #36475a;
@@ -84,6 +101,14 @@
   --surface: #18232e;
   --fg: #efe7d8;
   --muted: #9fabb5;
+  --pic-0: #e0566a;
+  --pic-1: #7d9cc4;
+  --pic-2: #7fb08a;
+  --pic-3: #d9a54a;
+  --pic-4: #b48abf;
+  --pic-5: #6fb3b7;
+  --pic-6: #d08a63;
+  --pic-7: #9aa6b4;
   --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' fill='none' stroke='%239fabb5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --border: #2a3845;
   --field-border: #36475a;
@@ -258,9 +283,47 @@ h2 {
   margin-top: 2.5rem;
 }
 
-/* Security codes side by side in a changed-link warning: never split. */
-.codes p {
-  margin: 0.3rem 0;
+/* A security code's picture: the pattern on a faint tint of its colour. */
+.key-picture {
+  flex: none;
+}
+
+.key-picture rect {
+  fill: var(--pic);
+}
+
+.key-picture .bg {
+  fill-opacity: 0.14;
+}
+
+.code summary code {
+  white-space: nowrap;
+}
+
+.code summary .key-picture {
+  margin-right: 0.4rem;
+  vertical-align: -5px;
+}
+
+/* Before and now, side by side in a changed-link warning. */
+.codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin: 0.9rem 0 0.4rem;
+}
+
+.codes figure {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.codes figcaption {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.85rem;
 }
 
 .codes code {
@@ -443,8 +506,22 @@ h2 {
 
 .contacts a {
   display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.contact-picture {
+  display: flex;
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.contact-text {
+  display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  min-width: 0;
 }
 
 .contacts .contact-code {

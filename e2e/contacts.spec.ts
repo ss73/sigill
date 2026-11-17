@@ -35,7 +35,7 @@ test("people you write to are listed on the send page, with the language used", 
   await send(page, "Hej Bob");
 
   await page.goto("/#send");
-  await expect(page.getByTestId("contacts").locator("a > span")).toHaveText(["bob@example.com"]);
+  await expect(page.getByTestId("contact-name")).toHaveText(["bob@example.com"]);
   // The same security code Bob sees on his own link page.
   await expect(page.getByTestId("contact-code")).toHaveText(await bob.getByTestId("security-code").textContent() ?? "");
   await page.getByTestId("contacts").getByRole("link", { name: "bob@example.com" }).click();
@@ -60,6 +60,7 @@ test("a link for a known address with another key is held back until the user de
   await page.goto(`/#to=${otherKey()}&e=bob%40example.com`);
   await expect(page.getByTestId("key-changed")).toContainText("This isn't the link you used before");
   await expect(page.getByTestId("known-code")).toHaveText(/^[0-9a-f]{4}(-[0-9a-f]{4}){3}$/);
+  await expect(page.getByTestId("key-changed").locator("svg.key-picture")).toHaveCount(2);
   await expect(page.getByTestId("message")).toBeHidden();
   await expect(page.getByTestId("use-known-link")).toHaveAttribute("href", new URL(bobLink).hash);
 
@@ -74,7 +75,7 @@ test("a link for a known address with another key is held back until the user de
   await page.getByTestId("use-new-link").click();
   await expect(page.getByTestId("message")).toBeFocused();
   await page.goto("/#send");
-  await expect(page.getByTestId("contacts").locator("a > span")).toHaveText(["bob@example.com"]);
+  await expect(page.getByTestId("contact-name")).toHaveText(["bob@example.com"]);
   await expect(page.getByTestId("contacts").locator("a")).toHaveAttribute("href", `#to=${newKey}&e=bob%40example.com`);
 });
 
@@ -94,7 +95,7 @@ test("senders are remembered from their messages, and a mismatching sender is fl
   await expect(me.getByTestId("message-text")).toHaveText("from the real Alice");
   await expect(me.getByTestId("sender-changed")).toHaveCount(0);
   await me.goto("/#send");
-  await expect(me.getByTestId("contacts").locator("a > span")).toHaveText(["alice@example.com"]);
+  await expect(me.getByTestId("contact-name")).toHaveText(["alice@example.com"]);
 
   // Mallory makes an inbox and signs as Alice.
   const mallory = await (await browser.newContext()).newPage();
@@ -123,7 +124,7 @@ test("remembering is set in the settings menu, and forgetting asks first", async
   const openSettings = () => settings.locator("summary").click();
 
   // The list itself has nothing destructive besides "Remove".
-  await expect(page.getByTestId("contacts").locator("a > span")).toHaveText(["bob@example.com"]);
+  await expect(page.getByTestId("contact-name")).toHaveText(["bob@example.com"]);
   await expect(page.getByTestId("forget-contacts")).toBeHidden();
 
   // Forgetting everyone asks; cancelling keeps everyone.
@@ -132,7 +133,7 @@ test("remembering is set in the settings menu, and forgetting asks first", async
   await page.getByTestId("forget-contacts").click();
   await expect(settings).toContainText("Forget everyone on this list?");
   await page.getByRole("button", { name: "Cancel" }).click();
-  await expect(page.getByTestId("contacts").locator("a > span")).toHaveText(["bob@example.com"]);
+  await expect(page.getByTestId("contact-name")).toHaveText(["bob@example.com"]);
 
   // Escape and clicking elsewhere close it.
   await page.keyboard.press("Escape");
@@ -164,7 +165,7 @@ test("remembering is set in the settings menu, and forgetting asks first", async
   await page.goto(bobLink);
   await send(page, "and again");
   await page.goto("/#send");
-  await expect(page.getByTestId("contacts").locator("a > span")).toHaveText(["bob@example.com"]);
+  await expect(page.getByTestId("contact-name")).toHaveText(["bob@example.com"]);
 
   // Forgetting everyone, confirmed.
   await openSettings();

@@ -2,6 +2,7 @@
 
 import { fingerprint } from "../../crypto";
 import { h } from "../dom";
+import { keyPicture } from "../key-picture";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { CONTACTS_CHANGED, contacts, forgetContact } from "../contacts";
 import { appBase, cleanEmail, fragmentFromPaste, inboxHash, inviteLink } from "../links";
@@ -145,11 +146,18 @@ function contactsCard(): HTMLElement {
                 remove.setAttribute("aria-label", `${t.compose.replyRemove}: ${name}`);
                 // Their security code, as they see it on their own link page.
                 const code = h("small", { class: "contact-code", "data-testid": "contact-code" });
+                const picture = h("span", { class: "contact-picture" });
                 void fingerprint(person.publicKey).then((value) => {
                   code.textContent = value;
                   code.setAttribute("aria-label", `${t.common.securityCode} ${value}`);
+                  picture.replaceChildren(keyPicture(value, 32));
                 });
-                return h("li", null, h("a", { href: inboxHash(person.publicKey, person.email) }, h("span", null, name), code), remove);
+                return h(
+                  "li",
+                  null,
+                  h("a", { href: inboxHash(person.publicKey, person.email) }, picture, h("span", { class: "contact-text" }, h("span", { "data-testid": "contact-name" }, name), code)),
+                  remove,
+                );
               }),
             ),
           )]
