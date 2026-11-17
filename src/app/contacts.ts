@@ -20,6 +20,8 @@ export interface Contact {
 
 const STORAGE_KEY = "sigill.contacts";
 const OFF_KEY = "sigill.contacts.off";
+/** Fired on window whenever the list or the setting changes. */
+export const CONTACTS_CHANGED = "sigill:contacts";
 
 let list: Contact[] = load();
 
@@ -47,7 +49,14 @@ function load(): Contact[] {
   }
 }
 
+function changed(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CONTACTS_CHANGED));
+  }
+}
+
 function save(): void {
+  changed();
   try {
     if (list.length) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(list.map((c) => ({ k: keyId(c.publicKey), e: c.email, l: c.lang }))));
@@ -78,7 +87,9 @@ export function setContactsEnabled(on: boolean): void {
   } catch {
     // Applies to this visit only.
   }
-  if (!on) {
+  if (on) {
+    changed();
+  } else {
     clearContacts();
   }
 }

@@ -458,6 +458,8 @@ test("the theme can be picked and is remembered", async ({ page }) => {
   const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   const light = await background();
 
+  // In the settings menu.
+  await page.getByTestId("settings").locator("summary").click();
   await page.getByTestId("theme-dark").click();
   await expect(html).toHaveAttribute("data-theme", "dark");
   await expect(page.getByTestId("theme-dark")).toHaveAttribute("aria-checked", "true");
@@ -467,6 +469,7 @@ test("the theme can be picked and is remembered", async ({ page }) => {
   await expect(html).toHaveAttribute("data-theme", "dark");
 
   // Back to following the device, which is light here.
+  await page.getByTestId("settings").locator("summary").click();
   await page.getByTestId("theme-auto").click();
   await expect(html).not.toHaveAttribute("data-theme", /.*/);
   expect(await background()).toBe(light);

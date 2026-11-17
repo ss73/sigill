@@ -48,8 +48,9 @@ Pages projects. To host your own copy, give it a subdomain and set
   that claims a known address with a different key is held back with both
   security codes until the user goes back to the known link or accepts the
   new one, and a message whose reply link contradicts the known one is
-  flagged. People can be removed one by one; the list's "⋯" menu forgets
-  everyone or stops remembering on this browser, each after a confirmation.
+  flagged. People can be removed one by one; the settings menu (⚙ in the
+  top bar, next to the language) forgets everyone or stops remembering on
+  this browser, each after a confirmation. It also holds the theme.
 - **Several addresses:** one inbox (and passkey) per e-mail address. The
   link page's address list switches between them without a prompt, and
   *Add another address…* sets up the next. Opening a message makes its inbox

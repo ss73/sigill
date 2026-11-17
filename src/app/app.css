@@ -267,18 +267,6 @@ h2 {
   white-space: nowrap;
 }
 
-/* A heading with a small menu on the right. */
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.card-head h2 {
-  margin: 0;
-}
-
 .menu {
   position: relative;
 }
@@ -318,6 +306,10 @@ h2 {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: 0 10px 24px -12px var(--shadow);
+  /* Not the top bar's mono. */
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 .menu-panel p {
@@ -327,6 +319,77 @@ h2 {
 .menu-panel .help {
   margin-top: 0.3rem;
   font-size: 0.85rem;
+}
+
+/* Settings: labelled sections with a hairline between. */
+.menu-section {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.menu-section + .menu-section {
+  margin-top: 0.6rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.menu-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* An on/off switch drawn over a checkbox, so it stays one for assistive tech. */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.switch input {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 2.2rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--field-border);
+  border-radius: 1rem;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.switch input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.25rem - 6px);
+  height: calc(1.25rem - 6px);
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s;
+}
+
+.switch input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.switch input:checked::after {
+  background: var(--surface);
+  transform: translateX(0.95rem);
 }
 
 .menu-panel .actions {

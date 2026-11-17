@@ -3,6 +3,7 @@
 import { h, icon, type IconName } from "./dom";
 import { LANGUAGES, isLang, t, type Lang } from "./i18n";
 import { THEMES, setTheme, theme, type Theme } from "./theme";
+import { clearContacts, contacts, contactsEnabled, setContactsEnabled } from "./contacts";
 
 export function page(...children: (Node | false | null | undefined)[]): HTMLElement {
   return h("div", { class: "page" }, ...children);
@@ -195,4 +196,113 @@ export function themeSwitch(): HTMLElement {
   update();
   group.append(...buttons);
   return group;
+}
+
+/**
+ * A small pop-over menu on a <details>: opens on its button, closes on
+ * Escape or a click elsewhere. `fill` builds the panel each time it opens.
+ */
+export function menu(
+  iconName: IconName,
+  label: string,
+  fill: (panel: HTMLElement, close: () => void) => void,
+  testId?: string,
+): HTMLElement {
+  const panel = h("div", { class: "menu-panel" });
+  const el = h(
+    "details",
+    { class: "menu", "data-testid": testId },
+    h("summary", { "aria-label": label, title: label }, icon(iconName)),
+    panel,
+  );
+  const close = (): void => {
+    el.open = false;
+  };
+  el.addEventListener("toggle", () => {
+    if (el.open) {
+      fill(panel, close);
+    }
+  });
+  // On the document: focus may be on a button inside that was just replaced.
+  // (For clicks, the path rather than the target, for the same reason.)
+  function escape(event: KeyboardEvent): void {
+    if (!el.isConnected) {
+      document.removeEventListener("keydown", escape);
+    } else if (event.key === "Escape" && el.open) {
+      close();
+      el.querySelector("summary")?.focus();
+    }
+  }
+  function outside(event: MouseEvent): void {
+    if (!el.isConnected) {
+      document.removeEventListener("click", outside);
+    } else if (el.open && !event.composedPath().includes(el)) {
+      close();
+    }
+  }
+  document.addEventListener("keydown", escape);
+  document.addEventListener("click", outside);
+  return el;
+}
+
+/**
+ * Per-browser settings: the look, and whether people written with are
+ * remembered. Forgetting asks once more first.
+ */
+export function settingsMenu(): HTMLElement {
+  return menu("settings", t.common.settings, (panel) => {
+    const people = h("div", { class: "menu-section" });
+
+    function confirm(question: string, label: string, action: () => void, testId: string): void {
+      people.replaceChildren(
+        h("p", null, question),
+        actions(
+          button(label, () => {
+            action();
+            renderPeople();
+          }, { variant: "secondary", testId }),
+          button(t.send.cancel, () => {
+            renderPeople();
+            people.querySelector<HTMLElement>("input, button")?.focus();
+          }, { variant: "text" }),
+        ),
+      );
+      people.querySelector("button")?.focus();
+    }
+
+    function renderPeople(): void {
+      const enabled = contactsEnabled();
+      const count = contacts().length;
+      const remember = h("input", { type: "checkbox", role: "switch", checked: enabled, "data-testid": "remember-contacts" });
+      remember.addEventListener("change", () => {
+        if (remember.checked) {
+          setContactsEnabled(true);
+          renderPeople();
+        } else if (count) {
+          // Switching off forgets everyone: ask.
+          remember.checked = true;
+          confirm(t.send.confirmStop, t.send.stopRemembering, () => setContactsEnabled(false), "confirm-stop");
+        } else {
+          setContactsEnabled(false);
+          renderPeople();
+        }
+      });
+      people.replaceChildren(
+        h("h3", null, t.send.contactsTitle),
+        h("label", { class: "switch" }, remember, h("span", null, t.common.rememberPeople)),
+        ...(count
+          ? [
+              button(t.send.forgetContacts, () => confirm(t.send.confirmForget, t.send.forgetContacts, clearContacts, "confirm-forget"), {
+                variant: "text",
+                testId: "forget-contacts",
+              }),
+            ]
+          : []),
+        h("p", { class: "help" }, t.send.contactsHelp),
+      );
+    }
+
+    renderPeople();
+    panel.replaceChildren(h("div", { class: "menu-section" }, h("h3", null, t.common.theme), themeSwitch()), people);
+  }, "settings");
 }

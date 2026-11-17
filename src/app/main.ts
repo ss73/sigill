@@ -1,7 +1,7 @@
 import { lang, preferredLang, setLang, storedLang, t, isLang } from "./i18n";
 import { langHint, parseRoute } from "./links";
 import { initTheme } from "./theme";
-import { backLink, languageSelect, notice, themeSwitch } from "./ui";
+import { backLink, languageSelect, notice, settingsMenu } from "./ui";
 import { brokenLinkView, composeView } from "./views/compose";
 import { homeView } from "./views/home";
 import { inboxView } from "./views/inbox";
@@ -37,13 +37,13 @@ async function browserSupported(): Promise<boolean> {
   }
 }
 
-/** Back on the left (except on the home page); theme and language on the right. */
+/** Back on the left (except on the home page); language and settings on the right. */
 function topBar(): HTMLElement {
   const select = languageSelect(lang(), (code) => void switchLanguage(code), "ui-language");
   select.setAttribute("aria-label", t.common.language);
   const tools = document.createElement("div");
   tools.className = "tools";
-  tools.append(themeSwitch(), select);
+  tools.append(select, settingsMenu());
   const bar = document.createElement("nav");
   bar.className = "topbar";
   if (parseRoute(location.hash).name !== "home") {
