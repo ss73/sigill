@@ -2,10 +2,11 @@
 
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
-import { appBase, cleanEmail, fragmentFromPaste, inviteLink } from "../links";
+import { clearContacts, contacts, contactsEnabled, forgetContact, setContactsEnabled } from "../contacts";
+import { appBase, cleanEmail, fragmentFromPaste, inboxHash, inviteLink } from "../links";
 import { asText, inviteEmail, mailto, type Email } from "../mail";
 import { emailOf, knownInboxes } from "../session";
-import { actions, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
+import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, title } from "../ui";
 
 export function sendView(): HTMLElement {
   // --- Paste an existing secure link -----------------------------------------
@@ -89,6 +90,7 @@ export function sendView(): HTMLElement {
 
   return page(
     title(t.send.title, t.send.lead),
+    contactsCard(),
     h(
       "section",
       { class: "card" },
@@ -115,4 +117,60 @@ function ownAddressField(list: HTMLSelectElement, other: HTMLInputElement): HTML
   const el = field(t.common.yourEmail, list, t.send.yourEmailHelp);
   list.after(other);
   return el;
+}
+
+/**
+ * People written to or heard from, one click from writing again. Shown once
+ * there is someone, or while remembering is off (to switch it back on).
+ */
+function contactsCard(): HTMLElement {
+  const holder = h("div");
+  let toggled = false; // keeps the card in place after switching it back on
+  function render(): void {
+    const enabled = contactsEnabled();
+    const people = contacts();
+    if (enabled && !people.length && !toggled) {
+      holder.replaceChildren();
+      return;
+    }
+    const remember = h("input", { type: "checkbox", checked: enabled, "data-testid": "remember-contacts" });
+    remember.addEventListener("change", () => {
+      setContactsEnabled(remember.checked);
+      toggled = true;
+      render();
+      holder.querySelector<HTMLInputElement>("input[type=checkbox]")?.focus();
+    });
+    holder.replaceChildren(
+      h(
+        "section",
+        { class: "card" },
+        h("h2", null, t.send.contactsTitle),
+        people.length
+          ? h(
+              "ul",
+              { class: "contacts", "data-testid": "contacts" },
+              ...people.map((person) => {
+                const name = person.email ?? t.inbox.unnamed;
+                const remove = button(t.compose.replyRemove, () => {
+                  forgetContact(person.publicKey);
+                  render();
+                }, { variant: "text" });
+                remove.setAttribute("aria-label", `${t.compose.replyRemove}: ${name}`);
+                return h("li", null, h("a", { href: inboxHash(person.publicKey, person.email) }, name), remove);
+              }),
+            )
+          : null,
+        h("label", { class: "check" }, remember, t.send.rememberContacts),
+        h("p", { class: "help" }, t.send.contactsHelp),
+        people.length
+          ? actions(button(t.send.forgetContacts, () => {
+              clearContacts();
+              render();
+            }, { variant: "text", testId: "forget-contacts" }))
+          : null,
+      ),
+    );
+  }
+  render();
+  return holder;
 }

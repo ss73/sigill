@@ -1,9 +1,10 @@
 /** Writing to an inbox: the page a secure link opens. No passkey needed. */
 
-import { fingerprint } from "../../crypto";
+import { fingerprint, type Bytes } from "../../crypto";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
-import { appBase, cleanEmail, messageLink } from "../links";
+import { conflictFor, contactFor, rememberContact } from "../contacts";
+import { appBase, cleanEmail, inboxHash, messageLink } from "../links";
 import { asText, fitsMailto, mailto, messageEmail, type Email } from "../mail";
 import { sealMessage, type ReplyTo } from "../payload";
 import {
@@ -22,7 +23,7 @@ import {
 import { PasskeyError } from "../../passkey";
 import { actions, button, copyButton, field, languageSelect, linkButton, messageSlot, notice, page, securityCode, title } from "../ui";
 
-export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElement {
+export function composeView(to: Bytes, recipientEmail?: string): HTMLElement {
   const textarea = h("textarea", {
     rows: 8,
     placeholder: t.compose.placeholder,
@@ -196,7 +197,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   let email: Email | null = null;
   let fits = true;
   let sequence = 0;
-  let emailLang: Lang = lang();
+  let emailLang: Lang = contactFor(to)?.lang ?? lang();
 
   function replyTo(): ReplyTo | undefined {
     if (!replyInbox) {
@@ -233,12 +234,21 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
   }
   textarea.addEventListener("input", () => void update());
 
+  /** Sent (or copied to send): from now on this person is known. */
+  function sent(): void {
+    const own = knownInboxes().some((inbox) => inboxHash(inbox.publicKey) === inboxHash(to));
+    if (!own) {
+      rememberContact({ publicKey: to, email: recipientEmail, lang: emailLang });
+    }
+  }
+
   send.addEventListener("click", (event) => {
     if (!email) {
       event.preventDefault();
       textarea.focus();
       return;
     }
+    sent();
     // Copy as well: covers webmail users whose browser has no mail program set up.
     void navigator.clipboard?.writeText(fits ? asText(email) : email.body).catch(() => {});
     slot.show(
@@ -257,7 +267,7 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
     ),
   );
 
-  return page(
+  const view = page(
     title(t.compose.title(recipientEmail), t.compose.lead),
     h(
       "section",
@@ -272,11 +282,65 @@ export function composeView(to: Uint8Array, recipientEmail?: string): HTMLElemen
         }, "email-language"),
       ),
       status,
-      actions(send, copyButton(t.compose.copyInstead, () => (email ? asText(email) : ""), { testId: "copy-message" })),
+      actions(
+        send,
+        copyButton(
+          t.compose.copyInstead,
+          () => {
+            if (email) {
+              sent();
+            }
+            return email ? asText(email) : "";
+          },
+          { testId: "copy-message" },
+        ),
+      ),
       slot.el,
       codeSlot,
     ),
   );
+  const conflict = conflictFor(to, recipientEmail);
+  if (conflict) {
+    holdForChangedLink(view, conflict.publicKey, to, recipientEmail!);
+  }
+  return view;
+}
+
+/**
+ * A known address with a different key: someone may have swapped the link.
+ * Writing waits until the user picks the new link or goes back to the known one.
+ */
+function holdForChangedLink(view: HTMLElement, known: Bytes, to: Bytes, recipientEmail: string): void {
+  const card = view.querySelector<HTMLElement>(".card")!;
+  card.hidden = true;
+  const codes = h("div", { class: "codes" });
+  void Promise.all([fingerprint(known), fingerprint(to)]).then(([before, now]) =>
+    codes.replaceChildren(
+      h("p", null, `${t.compose.knownCode}: `, h("code", { "data-testid": "known-code" }, before)),
+      h("p", null, `${t.compose.newCode}: `, h("code", { "data-testid": "new-code" }, now)),
+    ),
+  );
+  const warning = notice(
+    "error",
+    h("strong", null, t.compose.keyChangedTitle),
+    h("p", null, t.compose.keyChanged(recipientEmail)),
+    codes,
+    actions(
+      linkButton(t.compose.useKnown, inboxHash(known, recipientEmail), { testId: "use-known-link" }),
+      button(
+        t.compose.useNew,
+        () => {
+          rememberContact({ publicKey: to, email: recipientEmail });
+          warning.remove();
+          card.hidden = false;
+          card.querySelector("textarea")?.focus();
+        },
+        { variant: "secondary", testId: "use-new-link" },
+      ),
+    ),
+  );
+  warning.dataset.testid = "key-changed";
+  card.before(warning);
 }
 
 export function brokenLinkView(): HTMLElement {

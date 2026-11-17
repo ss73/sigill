@@ -6,7 +6,8 @@ import { h } from "../dom";
 import { t } from "../i18n";
 import { fragmentFromPaste, inboxHash } from "../links";
 import { openMessage } from "../payload";
-import { passkeyErrorMessage, setReaderEmail, unlockInbox, unlockedInboxes, useInbox } from "../session";
+import { passkeyErrorMessage, knownInboxes, setReaderEmail, unlockInbox, unlockedInboxes, useInbox } from "../session";
+import { conflictFor, rememberContact } from "../contacts";
 import type { InboxKeyPair } from "../../crypto";
 import { actions, button, copyButton, field, linkButton, messageSlot, notice, page, title } from "../ui";
 
@@ -97,11 +98,20 @@ export function openView(envelope?: string): HTMLElement {
       if (to) {
         setReaderEmail(found.inbox.publicKey, to); // for an inbox that doesn't know its address
       }
+      // The sender's reply link: remembered, unless it contradicts the one known for them.
+      const changed = replyTo && conflictFor(replyTo.key, replyTo.email);
+      const own = replyTo && knownInboxes().some((inbox) => inboxHash(inbox.publicKey) === inboxHash(replyTo.key));
+      if (replyTo && !changed && !own) {
+        rememberContact({ publicKey: replyTo.key, email: replyTo.email });
+      }
+      const senderWarning = changed && replyTo.email ? notice("error", t.open.keyChanged(replyTo.email)) : null;
+      senderWarning?.setAttribute("data-testid", "sender-changed");
       content.replaceChildren(
         title(t.open.messageTitle, replyTo?.email ? t.open.from(replyTo.email) : undefined),
         h(
           "section",
           { class: "card" },
+          senderWarning,
           h("div", { class: "message", "data-testid": "message-text" }, text),
           actions(
             replyTo

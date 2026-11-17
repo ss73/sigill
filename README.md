@@ -42,6 +42,14 @@ Pages projects. To host your own copy, give it a subdomain and set
   so a revisit shows the link without a prompt; *Forget this inbox on this
   browser* removes it. The e-mail is also stored in the passkey's user ID,
   so unlocking on another device brings it back.
+- **People you write with:** the browser remembers the secure links you
+  write to (on sending) and reply links in messages you open, with the
+  e-mail language last used. *Send a secure message* lists them. A link
+  that claims a known address with a different key is held back with both
+  security codes until the user goes back to the known link or accepts the
+  new one, and a message whose reply link contradicts the known one is
+  flagged. People can be removed one by one or all at once, and remembering
+  can be switched off per browser (which forgets everyone).
 - **Several addresses:** one inbox (and passkey) per e-mail address. The
   link page's address list switches between them without a prompt, and
   *Add another address…* sets up the next. Opening a message makes its inbox

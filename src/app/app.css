@@ -258,6 +258,67 @@ h2 {
   margin-top: 2.5rem;
 }
 
+/* Security codes side by side in a changed-link warning: never split. */
+.codes p {
+  margin: 0.3rem 0;
+}
+
+.codes code {
+  white-space: nowrap;
+}
+
+/* People you write with: one per line, hairlines between. */
+.contacts {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+
+.contacts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.contacts a {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 0;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.contacts a:hover,
+.contacts a:focus-visible {
+  color: var(--accent);
+}
+
+.contacts .btn.text {
+  font-size: 0.9rem;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.check input {
+  width: auto;
+  margin: 0.3rem 0 0;
+  accent-color: var(--accent);
+}
+
+.check + .help {
+  margin-top: 0.4rem;
+}
+
 .how h2 {
   color: var(--accent);
   letter-spacing: 0.1em;
