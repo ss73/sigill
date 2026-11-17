@@ -1,6 +1,6 @@
 /** "Send a secure message" without a recipient link yet: paste one, or ask for one. */
 
-import { h } from "../dom";
+import { h, icon } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { clearContacts, contacts, contactsEnabled, forgetContact, setContactsEnabled } from "../contacts";
 import { appBase, cleanEmail, fragmentFromPaste, inboxHash, inviteLink } from "../links";
@@ -120,31 +120,43 @@ function ownAddressField(list: HTMLSelectElement, other: HTMLInputElement): HTML
 }
 
 /**
- * People written to or heard from, one click from writing again. Shown once
- * there is someone, or while remembering is off (to switch it back on).
+ * People written to or heard from, one click from writing again. The rarely
+ * needed (and destructive) options sit in a menu by the heading, each asking
+ * once more before acting.
  */
 function contactsCard(): HTMLElement {
   const holder = h("div");
-  let toggled = false; // keeps the card in place after switching it back on
+  let toggled = false; // keeps the card in place after switching back on
+
   function render(): void {
     const enabled = contactsEnabled();
     const people = contacts();
-    if (enabled && !people.length && !toggled) {
+    if (!enabled) {
+      holder.replaceChildren(
+        h(
+          "section",
+          { class: "card" },
+          h("h2", null, t.send.contactsTitle),
+          h("p", { class: "help" }, t.send.contactsOff, " ",
+            button(t.send.rememberAgain, () => {
+              setContactsEnabled(true);
+              toggled = true;
+              render();
+            }, { variant: "text", testId: "remember-again" }),
+          ),
+        ),
+      );
+      return;
+    }
+    if (!people.length && !toggled) {
       holder.replaceChildren();
       return;
     }
-    const remember = h("input", { type: "checkbox", checked: enabled, "data-testid": "remember-contacts" });
-    remember.addEventListener("change", () => {
-      setContactsEnabled(remember.checked);
-      toggled = true;
-      render();
-      holder.querySelector<HTMLInputElement>("input[type=checkbox]")?.focus();
-    });
     holder.replaceChildren(
       h(
         "section",
         { class: "card" },
-        h("h2", null, t.send.contactsTitle),
+        h("div", { class: "card-head" }, h("h2", null, t.send.contactsTitle), listMenu(people.length > 0, render)),
         people.length
           ? h(
               "ul",
@@ -160,17 +172,75 @@ function contactsCard(): HTMLElement {
               }),
             )
           : null,
-        h("label", { class: "check" }, remember, t.send.rememberContacts),
-        h("p", { class: "help" }, t.send.contactsHelp),
-        people.length
-          ? actions(button(t.send.forgetContacts, () => {
-              clearContacts();
-              render();
-            }, { variant: "text", testId: "forget-contacts" }))
-          : null,
       ),
     );
   }
   render();
   return holder;
+}
+
+/** "⋯" by the heading: forget everyone, or stop remembering. */
+function listMenu(hasPeople: boolean, changed: () => void): HTMLElement {
+  const panel = h("div", { class: "menu-panel" });
+  const menu = h(
+    "details",
+    { class: "menu", "data-testid": "contacts-menu" },
+    h("summary", { "aria-label": t.send.contactsMenu, title: t.send.contactsMenu }, icon("more")),
+    panel,
+  );
+
+  function confirm(question: string, label: string, action: () => void, testId: string): void {
+    panel.replaceChildren(
+      h("p", null, question),
+      actions(
+        button(label, () => {
+          action();
+          changed();
+        }, { variant: "secondary", testId }),
+        button(t.send.cancel, () => {
+          menu.open = false;
+        }, { variant: "text" }),
+      ),
+    );
+    panel.querySelector("button")?.focus();
+  }
+
+  function items(): void {
+    panel.replaceChildren(
+      ...(hasPeople
+        ? [button(t.send.forgetContacts, () => confirm(t.send.confirmForget, t.send.forgetContacts, clearContacts, "confirm-forget"), {
+            variant: "text",
+            testId: "forget-contacts",
+          })]
+        : []),
+      button(t.send.stopRemembering, () => confirm(t.send.confirmStop, t.send.stopRemembering, () => setContactsEnabled(false), "confirm-stop"), {
+        variant: "text",
+        testId: "stop-remembering",
+      }),
+      h("p", { class: "help" }, t.send.contactsHelp),
+    );
+  }
+
+  menu.addEventListener("toggle", () => {
+    if (menu.open) {
+      items();
+    }
+  });
+  // Closes like a menu: Escape, or a click elsewhere.
+  menu.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menu.open) {
+      menu.open = false;
+      menu.querySelector("summary")?.focus();
+    }
+  });
+  // (The path, not the target: a click inside may have just replaced it.)
+  function outside(event: MouseEvent): void {
+    if (!menu.isConnected) {
+      document.removeEventListener("click", outside);
+    } else if (menu.open && !event.composedPath().includes(menu)) {
+      menu.open = false;
+    }
+  }
+  document.addEventListener("click", outside);
+  return menu;
 }

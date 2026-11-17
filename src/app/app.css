@@ -267,6 +267,91 @@ h2 {
   white-space: nowrap;
 }
 
+/* A heading with a small menu on the right. */
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.card-head h2 {
+  margin: 0;
+}
+
+.menu {
+  position: relative;
+}
+
+.menu summary {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius);
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu summary:hover,
+.menu[open] summary {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 10;
+  display: grid;
+  justify-items: start;
+  gap: 0.4rem;
+  width: min(19rem, calc(100vw - 3rem));
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 10px 24px -12px var(--shadow);
+}
+
+.menu-panel p {
+  margin: 0;
+}
+
+.menu-panel .help {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.menu-panel .actions {
+  margin: 0.4rem 0 0;
+  align-items: center;
+}
+
+.menu-panel .btn {
+  justify-content: flex-start;
+  min-height: 2.4rem;
+  text-align: left;
+}
+
+.menu-panel .btn.text {
+  min-height: auto;
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+@media (max-width: 30rem) {
+  .menu-panel .actions .btn:not(.text) {
+    flex: 0 1 auto;
+  }
+}
+
 /* People you write with: one per line, hairlines between. */
 .contacts {
   margin: 0 0 1rem;
@@ -302,22 +387,7 @@ h2 {
   font-size: 0.9rem;
 }
 
-.check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  cursor: pointer;
-}
 
-.check input {
-  width: auto;
-  margin: 0.3rem 0 0;
-  accent-color: var(--accent);
-}
-
-.check + .help {
-  margin-top: 0.4rem;
-}
 
 .how h2 {
   color: var(--accent);

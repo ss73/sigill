@@ -109,29 +109,58 @@ test("senders are remembered from their messages, and a mismatching sender is fl
   await expect(me.getByTestId("key-changed")).toBeVisible();
 });
 
-test("remembering can be switched off, which forgets everyone", async ({ browser }) => {
+test("the list's options are in a menu and ask before acting", async ({ browser }) => {
   const bob = await (await browser.newContext()).newPage();
   await addAuthenticator(bob);
   const bobLink = await createInbox(bob, "bob@example.com");
   const page = await browser.newPage();
   await page.goto(bobLink);
   await send(page, "hi");
-
   await page.goto("/#send");
-  await page.getByTestId("remember-contacts").uncheck();
-  await expect(page.getByTestId("contacts")).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem("sigill.contacts"))).toBeNull();
 
+  // Nothing destructive in view until the menu is opened.
+  await expect(page.getByTestId("forget-contacts")).toBeHidden();
+  await page.getByTestId("contacts-menu").locator("summary").click();
+  await expect(page.getByTestId("contacts-menu")).toContainText("Kept on this browser only");
+
+  // A first click only asks; cancelling keeps everyone.
+  await page.getByTestId("forget-contacts").click();
+  await expect(page.getByTestId("contacts-menu")).toContainText("Forget everyone on this list?");
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("contacts").locator("a")).toHaveText(["bob@example.com"]);
+
+  // Escape and clicking elsewhere close it.
+  await page.getByTestId("contacts-menu").locator("summary").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("stop-remembering")).toBeHidden();
+  await page.getByTestId("contacts-menu").locator("summary").click();
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect(page.getByTestId("stop-remembering")).toBeHidden();
+
+  // Stopping forgets everyone, and nothing new is remembered.
+  await page.getByTestId("contacts-menu").locator("summary").click();
+  await page.getByTestId("stop-remembering").click();
+  await page.getByTestId("confirm-stop").click();
+  await expect(page.getByTestId("contacts")).toHaveCount(0);
+  await expect(page.getByText("aren't remembered on this browser")).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("sigill.contacts"))).toBeNull();
   await page.goto(bobLink);
   await send(page, "again");
   await page.goto("/#send");
   await page.reload();
   await expect(page.getByTestId("contacts")).toHaveCount(0);
-  await expect(page.getByTestId("remember-contacts")).not.toBeChecked();
 
-  await page.getByTestId("remember-contacts").check();
+  // And it can be turned back on from the same card.
+  await page.getByTestId("remember-again").click();
+  await expect(page.getByTestId("contacts-menu").locator("summary")).toBeVisible();
   await page.goto(bobLink);
   await send(page, "and again");
   await page.goto("/#send");
   await expect(page.getByTestId("contacts").locator("a")).toHaveText(["bob@example.com"]);
+
+  // Forgetting everyone, confirmed.
+  await page.getByTestId("contacts-menu").locator("summary").click();
+  await page.getByTestId("forget-contacts").click();
+  await page.getByTestId("confirm-forget").click();
+  await expect(page.getByTestId("contacts")).toHaveCount(0);
 });
