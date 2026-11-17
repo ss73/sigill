@@ -1,5 +1,6 @@
 /** "Send a secure message" without a recipient link yet: paste one, or ask for one. */
 
+import { fingerprint } from "../../crypto";
 import { h } from "../dom";
 import { lang, messagesFor, t, type Lang } from "../i18n";
 import { CONTACTS_CHANGED, contacts, forgetContact } from "../contacts";
@@ -142,7 +143,13 @@ function contactsCard(): HTMLElement {
                 const name = person.email ?? t.inbox.unnamed;
                 const remove = button(t.compose.replyRemove, () => forgetContact(person.publicKey), { variant: "text" });
                 remove.setAttribute("aria-label", `${t.compose.replyRemove}: ${name}`);
-                return h("li", null, h("a", { href: inboxHash(person.publicKey, person.email) }, name), remove);
+                // Their security code, as they see it on their own link page.
+                const code = h("small", { class: "contact-code", "data-testid": "contact-code" });
+                void fingerprint(person.publicKey).then((value) => {
+                  code.textContent = value;
+                  code.setAttribute("aria-label", `${t.common.securityCode} ${value}`);
+                });
+                return h("li", null, h("a", { href: inboxHash(person.publicKey, person.email) }, h("span", null, name), code), remove);
               }),
             ),
           )]
