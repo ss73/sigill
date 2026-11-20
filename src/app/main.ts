@@ -53,8 +53,22 @@ function topBar(): HTMLElement {
   return bar;
 }
 
+/** Where the code is, so anyone can check what runs here. */
+function footer(): HTMLElement {
+  const link = document.createElement("a");
+  link.href = "https://github.com/ss73/sigill";
+  link.target = "_blank"; // a draft on this page stays put
+  link.rel = "noopener";
+  link.textContent = t.common.sourceCode;
+  link.dataset.testid = "source-code";
+  const el = document.createElement("footer");
+  el.className = "footer";
+  el.append(link);
+  return el;
+}
+
 function render(): void {
-  app.replaceChildren(topBar(), view());
+  app.replaceChildren(topBar(), view(), footer());
   window.scrollTo(0, 0);
   app.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
 }

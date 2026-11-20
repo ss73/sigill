@@ -12,6 +12,7 @@ export const messages: Messages = {
     emailLanguage: "Sähköpostin kieli",
     settings: "Asetukset",
     rememberPeople: "Muista heidät tässä selaimessa",
+    sourceCode: "Avointa lähdekoodia GitHubissa",
     theme: "Teema",
     themeAuto: "Laitteen mukaan",
     themeLight: "Vaalea",

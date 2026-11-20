@@ -12,6 +12,7 @@ export const messages: Messages = {
     emailLanguage: "Idioma del correo",
     settings: "Ajustes",
     rememberPeople: "Recordarlas en este navegador",
+    sourceCode: "Código abierto en GitHub",
     theme: "Tema",
     themeAuto: "Como el dispositivo",
     themeLight: "Claro",

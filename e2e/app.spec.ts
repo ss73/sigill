@@ -473,6 +473,13 @@ test("lookalike and hidden-character addresses in a link can't pass for real one
   await expect(heading).toHaveText("Secure message to the owner of this link");
 });
 
+test("every page links to the source code", async ({ page }) => {
+  for (const path of ["/", "/#send", "/#inbox", "/#open"]) {
+    await page.goto(path);
+    await expect(page.getByTestId("source-code")).toHaveAttribute("href", "https://github.com/ss73/sigill");
+  }
+});
+
 test("the theme can be picked and is remembered", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");

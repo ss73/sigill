@@ -16,6 +16,7 @@ export const en = {
     emailLanguage: "Language of the e-mail",
     settings: "Settings",
     rememberPeople: "Remember them on this browser",
+    sourceCode: "Open source on GitHub",
     theme: "Theme",
     themeAuto: "Match device",
     themeLight: "Light",

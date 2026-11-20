@@ -12,6 +12,7 @@ export const messages: Messages = {
     emailLanguage: "Taal van de e-mail",
     settings: "Instellingen",
     rememberPeople: "Onthoud ze in deze browser",
+    sourceCode: "Open source op GitHub",
     theme: "Thema",
     themeAuto: "Zoals het apparaat",
     themeLight: "Licht",

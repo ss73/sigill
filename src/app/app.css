@@ -874,6 +874,23 @@ input[readonly] {
   font-size: 0.7rem;
 }
 
+/* --- Footer ---------------------------------------------------------------- */
+
+.footer {
+  margin-top: 3rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.footer a {
+  color: var(--muted);
+}
+
+.footer a:hover {
+  color: var(--accent);
+}
+
 /* --- Top bar: back, theme, language ---------------------------------------- */
 
 .topbar {
