@@ -42,7 +42,7 @@ test("receive: create inbox, get written to, open the message after a reload", a
   expect(mail.to).toBe("alice@example.com");
   expect(mail.subject).toBe("A secure message for you");
   const messageUrl = firstLink(mail.body);
-  expect(messageUrl).toContain("#m=");
+  expect(messageUrl).toMatch(/#c=[^&]+&m=/);
   expect(mail.body).not.toContain("hunter2");
 
   // Recipient opens it later: the key isn't remembered, so the passkey is needed.
@@ -102,6 +102,28 @@ test("a message for another inbox is explained, not shown", async ({ page }) => 
   await page.getByTestId("open-message").click();
   await expect(page.getByRole("alert")).toContainText("wasn't sent to the inbox you unlocked");
   await expect(page.getByTestId("message-text")).toHaveCount(0);
+  await expect(page.getByTestId("paste-message")).toHaveCount(0); // the link checked out, so no point re-pasting it
+
+  // A link from before check values: it could be either, so both are said.
+  const old = new URL(firstLink(parseMailto(href).body));
+  old.hash = old.hash.replace(/^#c=[^&]*&/, "#");
+  await page.goto(old.href);
+  await page.reload();
+  await page.getByTestId("open-message").click();
+  await expect(page.getByRole("alert")).toContainText("Either it was sent to another inbox, or the link was damaged");
+  await expect(page.getByTestId("paste-message")).toBeVisible();
+});
+
+test("a message link changed on the way is reported as damaged, not as for another inbox", async ({ page }) => {
+  await addAuthenticator(page);
+  const inboxUrl = await createInbox(page);
+  const link = firstLink(parseMailto(await writeMessage(page, inboxUrl, "hello")).body);
+  for (const broken of [link.slice(0, -20), link.replace(/(&m=.{40})./, (_, keep) => keep + (link.match(/&m=.{40}(.)/)![1] === "A" ? "B" : "A"))]) {
+    await page.goto(broken);
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("This message link is incomplete");
+    await expect(page.getByTestId("open-message")).toHaveCount(0);
+  }
 });
 
 test("a truncated message link is reported without a passkey prompt", async ({ page }) => {
@@ -121,7 +143,7 @@ test("long messages fall back to copy and paste", async ({ page, context }) => {
   await expect(page.getByTestId("compose-status")).toContainText("copied");
   await page.getByTestId("copy-message").click();
   const clipboard = await page.evaluate(() => navigator.clipboard.readText());
-  expect(clipboard).toContain("#m=");
+  expect(clipboard).toMatch(/#c=[^&]+&m=/);
 });
 
 test("a passkey without PRF gets a clear explanation", async ({ page }) => {

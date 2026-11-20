@@ -4,7 +4,7 @@ import { rpIdProblem } from "../../config";
 import { fromBase64Url, isWellFormed } from "../../crypto";
 import { h } from "../dom";
 import { t } from "../i18n";
-import { fragmentFromPaste, inboxHash } from "../links";
+import { fragmentFromPaste, inboxHash, isMessageFragment, linkIntact } from "../links";
 import { openMessage } from "../payload";
 import { passkeyErrorMessage, knownInboxes, setReaderEmail, unlockInbox, unlockedInboxes, useInbox } from "../session";
 import { conflictFor, rememberContact } from "../contacts";
@@ -32,12 +32,12 @@ function wellFormed(envelope: string): boolean {
 }
 
 function pasteField(): HTMLElement {
-  const input = h("input", { type: "url", placeholder: "https://…#m=…", autocomplete: "off", spellcheck: false, "data-testid": "paste-message" });
+  const input = h("input", { type: "url", placeholder: "https://…#c=…&m=…", autocomplete: "off", spellcheck: false, "data-testid": "paste-message" });
   const slot = messageSlot();
   input.addEventListener("input", () => {
     const value = input.value.trim();
     const hash = value ? fragmentFromPaste(value) : null;
-    if (hash?.startsWith("#m=")) {
+    if (hash && isMessageFragment(hash)) {
       location.hash = hash;
     } else {
       slot.show(value ? notice("error", t.open.notALink) : null);
@@ -46,7 +46,7 @@ function pasteField(): HTMLElement {
   return h("div", null, field(t.open.pasteLabel, input), slot.el);
 }
 
-export function openView(envelope?: string): HTMLElement {
+export function openView(envelope?: string, check?: string): HTMLElement {
   if (!envelope) {
     return page(
       title(t.open.pasteTitle, t.open.pasteLead),
@@ -54,7 +54,9 @@ export function openView(envelope?: string): HTMLElement {
     );
   }
 
-  if (!wellFormed(envelope)) {
+  // A link that arrived intact can only fail to open because it's for another inbox.
+  const intact = linkIntact(envelope, check);
+  if (!wellFormed(envelope) || intact === false) {
     return page(
       title(t.open.incompleteTitle),
       notice("error", t.open.incomplete),
@@ -140,10 +142,10 @@ export function openView(envelope?: string): HTMLElement {
       slot.show(
         notice(
           "error",
-          problem === "wrong-inbox" ? t.open.wrongInbox : problem === "damaged" ? t.open.damaged : passkeyErrorMessage(error),
+          problem === "wrong-inbox" ? (intact ? t.open.wrongInbox : t.open.wrongInboxOrDamaged) : problem === "damaged" ? t.open.damaged : passkeyErrorMessage(error),
         ),
       );
-      if (problem === "damaged") {
+      if (problem === "damaged" || (problem === "wrong-inbox" && !intact)) {
         slot.el.append(pasteField());
       }
     }

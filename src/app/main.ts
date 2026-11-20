@@ -24,7 +24,7 @@ function view(): HTMLElement {
     case "inbox":
       return inboxView(route);
     case "open":
-      return openView(route.envelope);
+      return openView(route.envelope, route.check);
   }
 }
 

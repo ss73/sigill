@@ -3,13 +3,18 @@
  * to the server:
  *
  *   #to=<inbox public key>&e=<owner e-mail>   write to an inbox
- *   #m=<envelope>&l=<lang>                    open a message
+ *   #c=<check>&m=<envelope>&l=<lang>          open a message
  *   #inbox&reply=<asker e-mail>&e=<e-mail>&l=<lang>   create/show your inbox
  *   #send                                     find a recipient / ask for a link
  *   #open                                     paste a message link
  *
  * `l` is the language the e-mail carrying the link was written in, so the
  * page opens in the same language (see i18n).
+ *
+ * `c` is a checksum of the envelope, so a link that a mail program cut short
+ * or rewrote is reported as damaged rather than as "not for your inbox". It
+ * comes first because links are cut at the end. Links without it (made
+ * before it existed) still open; their damage just can't be told apart.
  */
 
 import { fromBase64Url, toBase64Url, KEY_LENGTH, type Bytes } from "../crypto";
@@ -20,7 +25,7 @@ export type Route =
   | { name: "compose"; to: Bytes; email?: string }
   | { name: "broken-link" }
   | { name: "inbox"; reply?: string; email?: string }
-  | { name: "open"; envelope?: string };
+  | { name: "open"; envelope?: string; check?: string };
 
 const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
 
@@ -70,7 +75,8 @@ function fragment(entries: [string, string | undefined][]): string {
 export function parseRoute(hash: string): Route {
   const params = new URLSearchParams(hash.replace(/^#/, ""));
   if (params.has("m")) {
-    return { name: "open", envelope: params.get("m") ?? "" };
+    const check = params.get("c");
+    return { name: "open", envelope: params.get("m") ?? "", ...(check !== null && { check }) };
   }
   if (params.has("to")) {
     try {
@@ -109,7 +115,25 @@ export function inboxHash(publicKey: Uint8Array, ownerEmail?: string): string {
 }
 
 export function messageLink(base: string, envelope: string, lang?: string): string {
-  return `${base}#${fragment([["m", envelope], ["l", lang]])}`;
+  return `${base}#${fragment([["c", linkCheck(envelope)], ["m", envelope], ["l", lang]])}`;
+}
+
+/** CRC-32 of the envelope text, base64url: catches accidents, not forgery. */
+export function linkCheck(envelope: string): string {
+  let crc = ~0;
+  for (let i = 0; i < envelope.length; i++) {
+    crc ^= envelope.charCodeAt(i);
+    for (let bit = 0; bit < 8; bit++) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+  }
+  crc = ~crc >>> 0;
+  return toBase64Url(new Uint8Array([crc >>> 24, crc >>> 16, crc >>> 8, crc]));
+}
+
+/** True or false for a link with a check; undefined for one made without. */
+export function linkIntact(envelope: string, check: string | undefined): boolean | undefined {
+  return check === undefined ? undefined : check === linkCheck(envelope);
 }
 
 export function inviteLink(base: string, opts: { reply?: string; email?: string; lang?: string }): string {
@@ -134,4 +158,10 @@ export function fragmentFromPaste(text: string): string | null {
   const hash = trimmed.slice(index);
   const route = parseRoute(hash);
   return route.name === "home" ? null : hash;
+}
+
+/** Whether a pasted text is a message link, i.e. has an envelope. */
+export function isMessageFragment(hash: string): boolean {
+  const route = parseRoute(hash);
+  return route.name === "open" && !!route.envelope;
 }

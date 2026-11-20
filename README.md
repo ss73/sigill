@@ -82,8 +82,14 @@ Pages projects. To host your own copy, give it a subdomain and set
   language. Texts live in `src/app/i18n/`; `en.ts` is the source and the
   others are type-checked and tested against it.
 
-All data travels in the URL fragment (`#to=…`, `#m=…`), which browsers
+All data travels in the URL fragment (`#to=…`, `#c=…&m=…`), which browsers
 never send to the server.
+
+Message links start with a short checksum of the message (`c=`). Mail
+programs sometimes cut off or rewrite long links; with the checksum, such a
+link is reported as damaged straight away, and a message that still won't
+open is known to be for another inbox. Links made before the checksum
+existed still open.
 
 ## Layout
 

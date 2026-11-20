@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { fromBase64Url, toBase64Url } from "../crypto";
-import { cleanEmail, fragmentFromPaste, inboxLink, inviteLink, langHint, messageLink, parseRoute } from "./links";
+import {
+  cleanEmail,
+  fragmentFromPaste,
+  inboxLink,
+  inviteLink,
+  isMessageFragment,
+  langHint,
+  linkCheck,
+  linkIntact,
+  messageLink,
+  parseRoute,
+} from "./links";
 
 const BASE = "https://example.com/app/";
 const KEY = new Uint8Array(32).fill(7);
@@ -25,7 +36,7 @@ describe("links", () => {
   });
 
   it("parses message, invite and plain routes", () => {
-    expect(parseRoute(new URL(messageLink(BASE, "abc_-")).hash)).toEqual({ name: "open", envelope: "abc_-" });
+    expect(parseRoute(new URL(messageLink(BASE, "abc_-")).hash)).toEqual({ name: "open", envelope: "abc_-", check: linkCheck("abc_-") });
     expect(parseRoute(new URL(inviteLink(BASE, { reply: "me@x.io", email: "you@y.io" })).hash)).toEqual({
       name: "inbox",
       reply: "me@x.io",
@@ -40,11 +51,32 @@ describe("links", () => {
 
   it("carries the e-mail language as a hint", () => {
     const message = new URL(messageLink(BASE, "abc_-", "sv")).hash;
-    expect(message).toBe("#m=abc_-&l=sv");
-    expect(parseRoute(message)).toEqual({ name: "open", envelope: "abc_-" });
+    expect(message).toBe(`#c=${linkCheck("abc_-")}&m=abc_-&l=sv`);
+    expect(parseRoute(message)).toEqual({ name: "open", envelope: "abc_-", check: linkCheck("abc_-") });
     expect(langHint(message)).toBe("sv");
     expect(langHint(new URL(inviteLink(BASE, { lang: "de" })).hash)).toBe("de");
     expect(langHint("#m=abc")).toBeNull();
+  });
+
+  it("puts a check value first in message links, so a cut-off link is caught", () => {
+    expect(linkCheck("123456789")).toBe("y_Q5Jg"); // CRC-32 0xcbf43926
+    const envelope = "AQ" + "x".repeat(200);
+    const hash = new URL(messageLink(BASE, envelope)).hash;
+    const whole = parseRoute(hash);
+    expect(whole.name === "open" && linkIntact(whole.envelope!, whole.check)).toBe(true);
+    const cut = parseRoute(hash.slice(0, -10));
+    expect(cut.name === "open" && linkIntact(cut.envelope!, cut.check)).toBe(false);
+    const changed = parseRoute(hash.replace("xxx", "xyx"));
+    expect(changed.name === "open" && linkIntact(changed.envelope!, changed.check)).toBe(false);
+  });
+
+  it("still opens message links made before the check value", () => {
+    const route = parseRoute("#m=abc_-&l=sv");
+    expect(route).toEqual({ name: "open", envelope: "abc_-" });
+    expect(linkIntact("abc_-", undefined)).toBeUndefined();
+    expect(isMessageFragment("#m=abc_-")).toBe(true);
+    expect(isMessageFragment(`#c=${linkCheck("abc")}&m=abc`)).toBe(true);
+    expect(isMessageFragment("#open")).toBe(false);
   });
 
   it("extracts fragments from pasted links", () => {
